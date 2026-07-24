@@ -1,0 +1,9 @@
+allowBuilds:
+  core-js: true
+  cos-js-sdk-v5: true
+  ejs: true
+  fsevents: true
+  husky: true
+  swiper: true
+  vue-demi: true
+  yorkie: true
