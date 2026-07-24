@@ -2,8 +2,8 @@ const COS = require('cos-js-sdk-v5')
 // 填写自己腾讯云cos中的key和id (密钥)
 // https://console.cloud.tencent.com/cam/capi
 const cos = new COS({
-  SecretId: 'AKIDzmJbcMozu2tTmoZ3FBpCI7fwxjDRO4Tb',
-  SecretKey: 'sTptgCRP5UhcHfoiKfjWyEEzUjiRvA9s',
+  SecretId: '',
+  SecretKey: '',
 })
 
 
