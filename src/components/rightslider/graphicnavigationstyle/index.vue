@@ -28,13 +28,26 @@
               <img draggable="false" :src="element.src" alt="" />
             </div>
             <!-- 标题和链接 -->
-            <div class="imgText">
-              <el-input
-                v-model="element.text"
-                placeholder="请输入标题，也可不填"
-              ></el-input>
-              <!-- 选择类型 -->
-              <div class="select-type">
+              <div class="imgText">
+                <el-input
+                  v-model="element.text"
+                  placeholder="请输入标题，也可不填"
+                  maxlength="10"
+                ></el-input>
+                <!-- #11 角标选择 -->
+                <el-select
+                  v-model="element.badge"
+                  placeholder="角标"
+                  clearable
+                  size="mini"
+                  style="margin-top: 4px; width: 100%"
+                >
+                  <el-option label="无" value="" />
+                  <el-option label="HOT" value="hot" />
+                  <el-option label="NEW" value="new" />
+                </el-select>
+                <!-- 选择类型 -->
+                <div class="select-type">
                 <el-select
                   style="width: 60%"
                   v-model="element.linktype"
@@ -107,6 +120,39 @@
             />
           </el-tooltip>
         </div>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- #11 大图卡片样式 -->
+      <el-form-item class="lef" label="卡片样式">
+        {{ datas.cardStyle ? '大图卡片' : '普通' }}
+        <el-checkbox
+          style="margin-left: 170px"
+          v-model="datas.cardStyle"
+        />
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- #11 图标形状 -->
+      <el-form-item class="lef" label="图标形状" v-if="datas.navigationType === 0">
+        <el-radio-group v-model="datas.iconShape">
+          <el-radio label="circle">圆形</el-radio>
+          <el-radio label="square">方形</el-radio>
+          <el-radio label="rounded">圆角</el-radio>
+        </el-radio-group>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- #11 显示角标 -->
+      <el-form-item class="lef" label="显示角标">
+        {{ datas.showBadge ? '显示' : '隐藏' }}
+        <el-checkbox
+          style="margin-left: 196px"
+          v-model="datas.showBadge"
+        />
       </el-form-item>
 
       <div style="height: 10px" />
@@ -282,6 +328,7 @@ export default {
           src: res,
           text: '',
           http: {},
+          badge: '', // #11 角标
         })
         console.log(this.datas.imageList, 33333333333333)
       } else if (this.uploadImgDataType === '1') {

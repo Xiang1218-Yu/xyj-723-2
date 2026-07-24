@@ -18,6 +18,9 @@
         <el-button @click="catJson">查看JSON </el-button>
         <el-button @click="$refs.file.click()">导入JSON </el-button>
         <el-button @click="exportJSON">导出JSON </el-button>
+        <!-- #16 导出静态HTML和PNG -->
+        <el-button @click="exportHTML" type="success">导出HTML </el-button>
+        <el-button @click="exportPNG" type="warning">导出PNG </el-button>
         <input
           type="file"
           ref="file"
@@ -45,10 +48,7 @@
           <!-- 主体内容 -->
           <section
             class="phone-container"
-            :style="{
-              'background-color': pageSetup.bgColor,
-              backgroundImage: 'url(' + pageSetup.bgImg + ')',
-            }"
+            :style="containerStyle"
             @drop="drop($event)"
             @dragover="allowDrop($event)"
             @dragleave="dragleaves($event)"
@@ -153,7 +153,7 @@
 import utils from 'utils/index' // 方法类
 import componentProperties from '@/utils/componentProperties' // 组件数据
 import FileSaver from 'file-saver' // 导出JSON
-import { reactive, watch, toRefs, inject } from 'vue'
+import { reactive, watch, toRefs, inject, computed } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import vuedraggable from 'vuedraggable' //拖拽组件
 
@@ -172,6 +172,14 @@ const datas = reactive({
     titleHeight: 35, // 高度
     bgColor: 'rgba(249, 249, 249, 10)', //背景颜色
     bgImg: '', // 背景图片
+    // #15 新增页面设置
+    gradientBg: false, // 渐变背景开关
+    gradientStart: '#155bd4', // 渐变起色
+    gradientEnd: '#07c160', // 渐变止色
+    gradientAngle: 180, // 渐变角度
+    bgSize: 'auto', // 背景填充方式 auto/contain/cover/repeat
+    titleColor: '#333333', // 标题字色
+    outerMargin: 0, // 外边距(px)
   },
   pageComponents: [], //页面组件
 })
@@ -216,18 +224,181 @@ const exportJSON = () => {
 // 导入json
 const importJSON = () => {
   const file = document.getElementById('file').files[0]
+  if (!file) return
+  // #16 文件格式校验
+  if (!file.name.endsWith('.json')) {
+    ElMessage.warning('请选择 .json 文件')
+    return
+  }
   const reader = new FileReader()
   reader.readAsText(file)
   let _this = datas
   reader.onload = function () {
-    // this.result为读取到的json字符串，需转成json对象
-    let ImportJSON = JSON.parse(this.result)
-    // 检测是否导入成功
-    console.log(ImportJSON, '-----------------导入成功')
-    // 导入JSON数据
-    _this.id = ImportJSON.id
-    _this.pageSetup = JSON.parse(ImportJSON.templateJson)
-    _this.pageComponents = JSON.parse(ImportJSON.component)
+    try {
+      let ImportJSON = JSON.parse(this.result)
+      // #16 字段迁移：兼容旧版本数据，使用 componentProperties 中的完整默认值补全所有字段
+      const importedSetup =
+        typeof ImportJSON.templateJson === 'string'
+          ? JSON.parse(ImportJSON.templateJson)
+          : ImportJSON.templateJson || {}
+      const importedComponents =
+        typeof ImportJSON.component === 'string'
+          ? JSON.parse(ImportJSON.component)
+          : ImportJSON.component || []
+
+      // 使用页面设置完整默认值进行合并
+      const setupDefaults = {
+        name: '页面标题',
+        details: '',
+        isPerson: false,
+        isBack: true,
+        titleHeight: 35,
+        bgColor: 'rgba(249, 249, 249, 10)',
+        bgImg: '',
+        gradientBg: false,
+        gradientStart: '#155bd4',
+        gradientEnd: '#07c160',
+        gradientAngle: 180,
+        bgSize: 'auto',
+        titleColor: '#333333',
+        outerMargin: 0,
+      }
+      _this.pageSetup = utils.assiginObj(
+        JSON.parse(JSON.stringify(setupDefaults)),
+        importedSetup
+      )
+
+      // 组件数据迁移：为每个组件用 componentProperties 中的默认值补全所有新字段
+      _this.pageComponents = (importedComponents || []).map((comp) => {
+        const def = componentProperties.get(comp.component)
+        if (def && def.setStyle) {
+          comp.setStyle = utils.assiginObj(
+            JSON.parse(JSON.stringify(def.setStyle)),
+            comp.setStyle || {}
+          )
+        }
+        return comp
+      })
+      _this.id = ImportJSON.id
+      ElMessage.success('导入成功（已自动迁移补全新字段）')
+    } catch (e) {
+      console.error('导入失败', e)
+      ElMessage.error('导入失败：JSON格式错误或文件损坏')
+    }
+  }
+}
+
+// #15 容器样式（渐变背景 + 背景填充方式 + 外边距）
+const containerStyle = computed(() => {
+  const ps = datas.pageSetup
+  const style = {
+    'background-color': ps.bgColor,
+    padding: (ps.outerMargin || 0) + 'px',
+    'box-sizing': 'border-box',
+  }
+  if (ps.gradientBg) {
+    style.backgroundImage = `linear-gradient(${ps.gradientAngle || 180}deg, ${ps.gradientStart}, ${ps.gradientEnd})`
+  } else if (ps.bgImg) {
+    style.backgroundImage = 'url(' + ps.bgImg + ')'
+    style.backgroundRepeat = ps.bgSize === 'repeat' ? 'repeat' : 'no-repeat'
+    if (ps.bgSize === 'cover') style.backgroundSize = 'cover'
+    else if (ps.bgSize === 'contain') style.backgroundSize = 'contain'
+    else style.backgroundSize = '100% 100%'
+  }
+  return style
+})
+
+// #16 导出静态HTML：收集所有样式表并内联，生成独立可用的HTML文件
+const exportHTML = () => {
+  const phoneEl =
+    document.getElementById('imageTofile') ||
+    document.querySelector('.phoneAll')
+  if (!phoneEl) {
+    ElMessage.warning('未找到预览区域')
+    return
+  }
+  // 克隆节点
+  const clone = phoneEl.cloneNode(true)
+  // 移除所有 Vue 事件相关属性和 scoped 标记（无关紧要，浏览器忽略）
+  // 收集页面所有 CSS 规则
+  let collectedStyles = ''
+  try {
+    for (const sheet of document.styleSheets) {
+      try {
+        const rules = sheet.cssRules || sheet.rules
+        for (const rule of rules) {
+          collectedStyles += rule.cssText + '\n'
+        }
+      } catch (e) {
+        // 跨域样式表跳过
+      }
+    }
+  } catch (e) {
+    // 样式收集失败时静默
+  }
+  const title = (datas.pageSetup && datas.pageSetup.name) || '页面'
+  const html = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${title}</title>
+<style>
+*{box-sizing:border-box;}
+body{margin:0;padding:20px;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;}
+.phoneAll{max-width:375px;margin:0 auto;background:#fff;box-shadow:0 0 20px rgba(0,0,0,0.1);position:relative;overflow:hidden;}
+.phoneAll img{max-width:100%;display:block;}
+.statusBar{width:100%;display:block;}
+${collectedStyles}
+</style>
+</head>
+<body>${clone.outerHTML}</body>
+</html>`
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+  FileSaver.saveAs(blob, `${title}.html`)
+  ElMessage.success('HTML导出成功')
+}
+
+// #16 导出PNG长图（使用html2canvas）
+const exportPNG = async () => {
+  const phoneEl = document.getElementById('imageTofile')
+  if (!phoneEl) {
+    ElMessage.warning('未找到预览区域')
+    return
+  }
+  const loading = ElMessage({
+    message: '正在生成截图...',
+    type: 'info',
+    duration: 0,
+  })
+  try {
+    const html2canvas = (await import('html2canvas')).default
+    const canvas = await html2canvas(phoneEl, {
+      useCORS: true,
+      allowTaint: true,
+      scale: 2,
+      backgroundColor: '#ffffff',
+      logging: false,
+      width: phoneEl.scrollWidth,
+      height: phoneEl.scrollHeight,
+      windowWidth: phoneEl.scrollWidth,
+      windowHeight: phoneEl.scrollHeight,
+    })
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const title = (datas.pageSetup && datas.pageSetup.name) || 'page'
+        FileSaver.saveAs(blob, `${title}.png`)
+        loading.close()
+        ElMessage.success('PNG导出成功')
+      } else {
+        loading.close()
+        ElMessage.error('截图生成失败')
+      }
+    })
+  } catch (e) {
+    loading.close()
+    console.error('PNG导出失败', e)
+    ElMessage.error('导出PNG失败：' + (e.message || '未知错误'))
   }
 }
 

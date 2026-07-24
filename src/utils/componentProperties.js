@@ -1,7 +1,7 @@
 const componentProperties = new Map()
 
 // 数据版本  每次修改组件数据  需要对版本进行修改
-// componentProperties.set('componentPropertiesVersion', 'V1.0.0')
+componentProperties.set('componentPropertiesVersion', 'V2.0.0')
 
 componentProperties.set('captiontext', {
   component: 'captiontext',
@@ -11,24 +11,31 @@ componentProperties.set('captiontext', {
   style: 'captiontextsstyle',
   setStyle: {
     text: '标题文字',
-    name: '标题文字',//标题内容
-    description: '',//描述内容
-    wordSize: 16,//标题大小
-    descriptionSize: 12,//描述大小
-    wordWeight: 400,//标题粗细
+    name: '标题文字', //标题内容
+    description: '', //描述内容
+    wordSize: 16, //标题大小
+    descriptionSize: 12, //描述大小
+    wordWeight: 400, //标题粗细
     positions: 'left', //显示位置  可选left/center
-    descriptionWeight: 200,//描述粗细
-    wordColor: 'rgba(50, 50, 51, 10)',//标题颜色
-    descriptionColor: 'rgba(150, 151, 153, 10)',//描述颜色
+    descriptionWeight: 200, //描述粗细
+    wordColor: 'rgba(50, 50, 51, 10)', //标题颜色
+    descriptionColor: 'rgba(150, 151, 153, 10)', //描述颜色
     backColor: 'rgba(255, 255, 255, 10)', //背景颜色
     borderBott: false, //底部分割线
-    wordHeight: 24,//框体高度
-    more: {    //查看更多
-      show: false,//是否显示查看更多
+    wordHeight: 24, //框体高度
+    leftIcon: '', // 左侧图标 (#7)
+    leftIconSize: 20, // 左侧图标大小
+    gradientTitle: false, // 小标题渐变开关 (#7)
+    gradientStart: '#155bd4', // 渐变起始色
+    gradientEnd: '#07c160', // 渐变结束色
+    subtitle: '', // 小标题文字 (#7)
+    more: {
+      //查看更多
+      show: false, //是否显示查看更多
       type: 1, // 样式选择
       text: '查看更多', //自定义文字
-      httpType: 10,//链接类型
-      http: '',//链接
+      httpType: 10, //链接类型
+      http: '', //链接
     },
   },
 })
@@ -72,6 +79,11 @@ componentProperties.set('listswitching', {
     showMore: false,
     moreUrl: null,
     bgImg: '',
+    columns: 2, // 列数 (#4 Mock商品编辑器)
+    boxShadow: true, // 卡片阴影 (#4)
+    buttonText: '立即购买', // 按钮文案 (#4)
+    buttonBgColor: '#ff4d4f', // 按钮背景色 (#4)
+    buttonTextColor: '#ffffff', // 按钮文字色 (#4)
   },
 })
 
@@ -83,13 +95,19 @@ componentProperties.set('pictureads', {
   style: 'pictureadsstyle',
   setStyle: {
     text: '图片广告',
-    swiperType: 0,  // 选择模板
-    borderRadius: 0,// 图片倒角
-    pageMargin: 0,  // 页面边距
+    swiperType: 0, // 选择模板
+    borderRadius: 0, // 图片倒角
+    pageMargin: 0, // 页面边距
     imageMargin: 0, // 图片边距
-    pagingType: 0,  // 分页类型: 0/"bullets"/"fraction"/"progressbar"
-    rowindividual: 2,// 一行个数
-    imageList: [],  // 添加图片
+    pagingType: 0, // 分页类型: 0/"bullets"/"fraction"/"progressbar"
+    rowindividual: 2, // 一行个数
+    imageList: [], // 添加图片
+    autoplay: true, // 自动播放 (#3 Swiper)
+    autoplayDelay: 3000, // 自动播放间隔(ms) (#3)
+    effect: 'slide', // 过渡效果 slide/fade/cube/coverflow (#3)
+    speed: 300, // 过渡速度(ms) (#3)
+    showArrows: false, // 显示箭头 (#3)
+    loop: true, // 循环播放 (#3)
   },
 })
 
@@ -111,6 +129,10 @@ componentProperties.set('graphicnavigation', {
     textHeight: 24, // 字体高度
     textSize: 12, // 字体大小
     bgImg: '',
+    cardStyle: false, // 大图卡片样式 (#11)
+    iconShape: 'circle', // 图标形状 circle/square/rounded (#11)
+    showBadge: false, // 显示角标 (#11)
+    badgeType: 'hot', // 角标类型 hot/new (#11)
   },
 })
 
@@ -124,6 +146,9 @@ componentProperties.set('richtext', {
     text: '富文本',
     myValue: '', //富文本内容
     backColor: 'rgb(249, 249, 249)', //背景颜色
+    fontSize: 14, // 默认字号 (#1)
+    lineHeight: 1.6, // 默认行高 (#1)
+    indent: 0, // 默认缩进 (#1)
   },
 })
 componentProperties.set('magiccube', {
@@ -137,6 +162,8 @@ componentProperties.set('magiccube', {
     rubiksCubeType: 0, // 魔方类型
     pageMargin: 0, //页面间距
     imgMargin: 0, //图片间隙
+    aspectRatio: '1:1', // 图片比例 (#9)
+    borderRadius: 0, // 圆角 (#9)
     imageList: [
       {
         src: '',
@@ -179,6 +206,13 @@ componentProperties.set('auxiliarysegmentation', {
     paddType: 0, //边距
     auxliarColor: 'rgb(229, 229, 229)', //辅助线颜色
     bordertp: 'solid', //线的类型
+    lineStyle: 'solid', // 线型 solid/dashed/double/gradient (#12)
+    lineText: '', // 分割线文字 (#12)
+    lineIcon: '', // 分割线图标 (#12)
+    indent: 0, // 缩进(px) (#12)
+    gradientStart: '#155bd4', // 渐变起始色 (#12)
+    gradientEnd: '#07c160', // 渐变结束色 (#12)
+    lineHeight: 1, // 线粗细 (#12)
   },
 })
 componentProperties.set('commoditysearch', {
@@ -241,6 +275,11 @@ componentProperties.set('notice', {
     noticeText: '请填写内容，如果过长，将会在手机上滚动显示', //内容
     backColor: 'rgb(255, 248, 233)', //背景颜色
     textColor: 'rgba(100, 101, 102)', //文字颜色
+    multiLine: false, // 多条滚动 (#6)
+    noticeList: ['公告内容一', '公告内容二'], // 多条公告列表 (#6)
+    direction: 'up', // 滚动方向 up/left (#6)
+    speed: 50, // 滚动速度 (#6)
+    leadingIcon: 'volume-o', // 前导图标 (#6)
   },
 })
 componentProperties.set('videoss', {
@@ -252,8 +291,12 @@ componentProperties.set('videoss', {
   setStyle: {
     text: '视频',
     src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4', // 视频地址
-    coverUrl:null, // 封面地址
+    coverUrl: null, // 封面地址
     autoplay: false, // 是否自动播放
+    loop: false, // 循环播放 (#2)
+    muted: false, // 静音 (#2)
+    showControls: true, // 控件开关 (#2)
+    objectFit: 'contain', // 填充方式 cover/contain (#2)
   },
 })
 
@@ -265,8 +308,8 @@ componentProperties.set('custommodule', {
   style: 'custommodulestyle',
   setStyle: {
     text: '自定义模块',
-    demo:'自定义内容',
-    img:'https://img2.baidu.com/it/u=1905875968,4289754134&fm=26&fmt=auto&gp=0.jpg'
+    demo: '自定义内容',
+    img: 'https://img2.baidu.com/it/u=1905875968,4289754134&fm=26&fmt=auto&gp=0.jpg',
   },
 })
 componentProperties.set('communitypowder', {
@@ -307,6 +350,12 @@ componentProperties.set('storenotecard', {
     positions: 'bottom', //标题位置
     linktype: '10',
     http: {},
+    tagList: [], // 标签编辑 (#14)
+    authorName: '', // 作者名称 (#14)
+    authorAvatar: '', // 作者头像 (#14)
+    multiImage: false, // 多图模式 (#14)
+    readCount: 0, // 阅读数(可填) (#14)
+    likeCount: 0, // 点赞数(可填) (#14)
   },
 })
 componentProperties.set('crowdoperation', {
@@ -349,6 +398,9 @@ componentProperties.set('investigate', {
     text: '表单模块',
     title: '表单模块',
     jsonData: [], //value1为sass显示内容，value2为前端显示内容
+    submitText: '提交', // 提交按钮文案 (#8)
+    submitColor: '#155bd4', // 提交按钮颜色 (#8)
+    submitShape: 'round', // 按钮形状 round/square (#8)
   },
 })
 componentProperties.set('tabBar', {
@@ -380,6 +432,10 @@ componentProperties.set('follow', {
     heade: 'https://imgs.starfirelink.com/miniShop//logo_1618466110849.png',
     followName: '公众号名称',
     followAppId: '',
+    followed: false, // 是否已关注(按钮切换) (#13)
+    intro: '', // 公众号简介 (#13)
+    historyArticles: [], // 历史文章列表 (#13)
+    showHistory: false, // 显示历史文章 (#13)
   },
 })
 componentProperties.set('suspension', {
@@ -392,6 +448,18 @@ componentProperties.set('suspension', {
     text: '悬浮按钮',
     linktype: '10',
     http: {},
+    iconUrl: 'https://imgs.starfirelink.com/vue-fire-start-h5/shop-peison/icon_back_36.png', // 按钮图标 (#10)
+    offsetX: 0, // 水平偏移(px) (#10)
+    offsetY: 0, // 垂直偏移(px) (#10)
+    opacity: 1, // 透明度 0-1 (#10)
+    position: 'right-bottom', // 位置 (#10)
+    fabExpand: false, // FAB展开菜单 (#10)
+    fabMenu: [
+      // FAB菜单项 (#10)
+      { icon: 'chat-o', text: '客服', linktype: '10', http: {} },
+      { icon: 'cart-o', text: '购物车', linktype: '10', http: {} },
+      { icon: 'star-o', text: '收藏', linktype: '10', http: {} },
+    ],
   },
 })
 

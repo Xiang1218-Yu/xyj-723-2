@@ -4,7 +4,7 @@
     <h2>图片广告</h2>
 
     <!-- 表单 -->
-    <el-form label-width="80px" :model="datas">
+    <el-form label-width="80px" :model="datas" :rules="rules">
       <!-- 标题内容 -->
       <el-form-item label="选择模板" class="lef">
         <p style="color: #000">{{ styleText }}</p>
@@ -101,6 +101,7 @@
                 <el-input
                   v-model="element.text"
                   placeholder="请输入标题，也可不填"
+                  maxlength="20"
                 ></el-input>
 
                 <!-- 选择类型 -->
@@ -123,6 +124,7 @@
                     style="width: 100%"
                     placeholder="请输入链接，输入前确保可以访问"
                     v-model="element.http.externalLink"
+                    maxlength="500"
                   ></el-input>
                 </div>
               </div>
@@ -142,6 +144,67 @@
 
       <!-- 下划线 -->
       <div class="bor"></div>
+
+      <!-- #3 自动播放 -->
+      <el-form-item class="lef" label="自动播放">
+        {{ datas.autoplay ? '开' : '关' }}
+        <el-checkbox style="margin-left: 196px" v-model="datas.autoplay" />
+      </el-form-item>
+
+      <!-- #3 自动播放间隔 -->
+      <el-form-item
+        v-if="datas.autoplay"
+        class="lef"
+        label="播放间隔"
+        prop="autoplayDelay"
+      >
+        <el-input-number
+          v-model.number="datas.autoplayDelay"
+          :min="500"
+          :max="10000"
+          :step="500"
+          controls-position="right"
+        />
+        <span style="margin-left: 8px; color: #969799; font-size: 12px">ms</span>
+      </el-form-item>
+
+      <!-- #3 循环播放 -->
+      <el-form-item class="lef" label="循环播放">
+        {{ datas.loop ? '开' : '关' }}
+        <el-checkbox style="margin-left: 196px" v-model="datas.loop" />
+      </el-form-item>
+
+      <!-- #3 过渡效果 -->
+      <el-form-item class="lef" label="过渡效果" v-if="datas.swiperType !== 0">
+        <el-radio-group v-model="datas.effect">
+          <el-radio label="slide">滑动</el-radio>
+          <el-radio label="fade">淡入</el-radio>
+          <el-radio label="cube" v-if="datas.swiperType === 1">方块</el-radio>
+          <el-radio label="coverflow" v-if="datas.swiperType === 1"
+            >3D流</el-radio
+          >
+        </el-radio-group>
+      </el-form-item>
+
+      <!-- #3 过渡速度 -->
+      <el-form-item class="lef" label="过渡速度" prop="speed">
+        <el-slider
+          v-model="datas.speed"
+          :min="100"
+          :max="2000"
+          :step="100"
+          input-size="small"
+          show-input
+        />
+      </el-form-item>
+
+      <!-- #3 箭头 -->
+      <el-form-item class="lef" label="左右箭头" v-if="datas.swiperType !== 0">
+        {{ datas.showArrows ? '显示' : '隐藏' }}
+        <el-checkbox style="margin-left: 196px" v-model="datas.showArrows" />
+      </el-form-item>
+
+      <div style="height: 10px" />
 
       <el-form-item
         class="lef"
@@ -231,6 +294,19 @@ export default {
     datas: Object,
   },
   data() {
+    // #3 数值范围校验
+    const validateRange = (min, max, label) => (rule, value, callback) => {
+      if (value === '' || value === null || value === undefined) {
+        return callback(new Error(`请输入${label}`))
+      }
+      if (typeof value !== 'number' || isNaN(value)) {
+        return callback(new Error(`${label}必须为数字`))
+      }
+      if (value < min || value > max) {
+        return callback(new Error(`${label}范围 ${min}-${max}`))
+      }
+      callback()
+    }
     return {
       optionsType: [
         {
@@ -242,6 +318,15 @@ export default {
           name: '外部链接',
         },
       ], // 选择跳转类型
+      // #3 校验规则
+      rules: {
+        autoplayDelay: [
+          { validator: validateRange(500, 10000, '播放间隔'), trigger: 'blur' },
+        ],
+        speed: [
+          { validator: validateRange(100, 2000, '过渡速度'), trigger: 'blur' },
+        ],
+      },
       emptyText: '',
     }
   },
@@ -379,7 +464,6 @@ export default {
     margin-top: 20px;
   }
 
-  // 上传弹框内容部分
   :deep(.uploadIMG) .el-dialog__body {
     height: 280px;
     display: flex;
@@ -427,19 +511,6 @@ export default {
         height: 100%;
         display: inline-block;
       }
-      span {
-        background: rgba(0, 0, 0, 0.5);
-        font-size: 12px;
-        position: absolute;
-        left: 0px;
-        bottom: 0px;
-        display: inline-block;
-        width: 100%;
-        text-align: center;
-        color: #fff;
-        height: 20px;
-        line-height: 20px;
-      }
     }
 
     /* 图片字 */
@@ -452,15 +523,6 @@ export default {
       justify-content: space-between;
       .select-type {
         display: flex;
-        :deep(.el-select) {
-          .el-input {
-            input {
-              white-space: nowrap;
-              overflow: hidden;
-              text-overflow: ellipsis;
-            }
-          }
-        }
       }
     }
   }

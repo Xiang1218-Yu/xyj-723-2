@@ -79,11 +79,20 @@
             <!-- 标题和链接 -->
             <div class="imgText">
               <div class="imgText-top">
-                <el-input v-model="element.iconText" placeholder="导航名称" />
+                <el-input v-model="element.iconText" placeholder="导航名称" maxlength="6" />
                 <div class="imgText-top-r">
                   <span>小圆点</span>
                   <el-checkbox v-model="element.isDot"></el-checkbox>
                 </div>
+              </div>
+              <!-- #5 徽标文本 -->
+              <div class="imgText-badge">
+                <el-input
+                  v-model="element.badge"
+                  placeholder="徽标(数字/文字，留空不显示)"
+                  maxlength="4"
+                  size="mini"
+                />
               </div>
               <!-- 标题和链接 -->
               <div class="imgTextChild">
@@ -207,6 +216,8 @@ export default {
         inactive: res,
         /** 是否显示小圆点 */
         isDot: false,
+        /** #5 徽标文本 */
+        badge: '',
         /** 跳转类型 */
         linktype: '10',
         /** 跳转参数 */
@@ -351,6 +362,10 @@ export default {
         .el-input--mini {
           flex: 1;
         }
+      }
+      /* #5 徽标输入 */
+      .imgText-badge {
+        margin-top: 6px;
       }
     }
   }

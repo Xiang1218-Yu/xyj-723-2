@@ -299,17 +299,17 @@
                 size="23"
                 v-show="datas.purchasebuttonType === 3"
               />
-              <em v-show="datas.purchasebuttonType === 4">{{
-                datas.purchase
+              <em v-show="datas.purchasebuttonType === 4" :style="btnStyle">{{
+                datas.buttonText || datas.purchase
               }}</em>
-              <em v-show="datas.purchasebuttonType === 5">{{
-                datas.purchase
+              <em v-show="datas.purchasebuttonType === 5" :style="btnStyle">{{
+                datas.buttonText || datas.purchase
               }}</em>
-              <em v-show="datas.purchasebuttonType === 6">{{
-                datas.purchase
+              <em v-show="datas.purchasebuttonType === 6" :style="btnStyle">{{
+                datas.buttonText || datas.purchase
               }}</em>
-              <em v-show="datas.purchasebuttonType === 7">{{
-                datas.purchase
+              <em v-show="datas.purchasebuttonType === 7" :style="btnStyle">{{
+                datas.buttonText || datas.purchase
               }}</em>
             </div>
           </div>
@@ -486,17 +486,17 @@
                       v-show="datas.purchasebuttonType === 3"
                     />
                     <em v-show="datas.purchasebuttonType === 4">{{
-                      datas.purchase
-                    }}</em>
+                datas.buttonText || datas.purchase
+              }}</em>
                     <em v-show="datas.purchasebuttonType === 5">{{
-                      datas.purchase
-                    }}</em>
+                datas.buttonText || datas.purchase
+              }}</em>
                     <em v-show="datas.purchasebuttonType === 6">{{
-                      datas.purchase
-                    }}</em>
+                datas.buttonText || datas.purchase
+              }}</em>
                     <em v-show="datas.purchasebuttonType === 7">{{
-                      datas.purchase
-                    }}</em>
+                datas.buttonText || datas.purchase
+              }}</em>
                   </div>
                 </div>
               </div>
@@ -648,17 +648,17 @@
                       v-show="datas.purchasebuttonType === 3"
                     />
                     <em v-show="datas.purchasebuttonType === 4">{{
-                      datas.purchase
-                    }}</em>
+                datas.buttonText || datas.purchase
+              }}</em>
                     <em v-show="datas.purchasebuttonType === 5">{{
-                      datas.purchase
-                    }}</em>
+                datas.buttonText || datas.purchase
+              }}</em>
                     <em v-show="datas.purchasebuttonType === 6">{{
-                      datas.purchase
-                    }}</em>
+                datas.buttonText || datas.purchase
+              }}</em>
                     <em v-show="datas.purchasebuttonType === 7">{{
-                      datas.purchase
-                    }}</em>
+                datas.buttonText || datas.purchase
+              }}</em>
                   </div>
                 </div>
               </div>
@@ -1009,6 +1009,23 @@ export default {
       tagColor: '#07c160',
       styleString: {},
     }
+  },
+  computed: {
+    // #4 按钮样式（支持自定义背景色和文字色）
+    btnStyle() {
+      return {
+        backgroundColor: this.datas.buttonBgColor || '#65c4aa',
+        color: this.datas.buttonTextColor || '#fff',
+        borderColor: this.datas.buttonBgColor || '#65c4aa',
+      }
+    },
+    // #4 卡片阴影样式
+    cardShadow() {
+      if (this.datas.boxShadow) {
+        return '0 2px 8px rgba(93,113,127,0.08)'
+      }
+      return 'none'
+    },
   },
   created() {
     console.log(this.datas, '--------------listswitching datas')

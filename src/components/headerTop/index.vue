@@ -15,6 +15,7 @@
       :style="{
         height: pageSetup.titleHeight + 'px',
         'line-height': pageSetup.titleHeight + 'px',
+        color: pageSetup.titleColor || '#333333',
       }"
     >
       {{ pageSetup.name }}

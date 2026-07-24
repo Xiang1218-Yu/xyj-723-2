@@ -12,17 +12,20 @@
       <div v-if="item1.type == 0">
         <van-cell-group>
           <van-field
-            :label="item1.name"
+            :label="renderLabel(item1)"
             :placeholder="item1.value"
             :value="item1.value2"
             readonly="readonly"
+            :required="item1.required"
           />
         </van-cell-group>
       </div>
 
       <!-- 下拉框 -->
       <div v-if="item1.type == 1" class="xiala">
-        <div class="titlename">{{ item1.name }}</div>
+        <div class="titlename">
+          <span v-if="item1.required" class="required-star">*</span>{{ item1.name }}
+        </div>
         <div class="select">
           <input
             type="text"
@@ -45,7 +48,7 @@
       </div>
 
       <!-- 单选框 -->
-      <van-field name="radio" :label="item1.name" v-if="item1.type == 2">
+      <van-field name="radio" :label="renderLabel(item1)" v-if="item1.type == 2">
         <template #input>
           <van-radio-group :value="item1.value2" direction="horizontal">
             <van-radio
@@ -59,10 +62,9 @@
       </van-field>
 
       <!-- 复选框 -->
-
       <van-field
         name="checkboxGroup"
-        :label="item1.name"
+        :label="renderLabel(item1)"
         v-if="item1.type == 3"
       >
         <template #input>
@@ -77,9 +79,39 @@
           </van-checkbox-group>
         </template>
       </van-field>
+
+      <!-- #8 日期选择 -->
+      <van-field
+        v-if="item1.type == 4"
+        :label="renderLabel(item1)"
+        :placeholder="item1.value || '请选择日期'"
+        readonly
+        is-link
+        :required="item1.required"
+      />
+
+      <!-- #8 开关 -->
+      <van-field v-if="item1.type == 5" :label="renderLabel(item1)">
+        <template #input>
+          <van-switch :model-value="!!item1.value2" />
+        </template>
+      </van-field>
+
+      <!-- #8 评分 -->
+      <van-field v-if="item1.type == 6" :label="renderLabel(item1)">
+        <template #input>
+          <van-rate :model-value="Number(item1.value2) || 0" />
+        </template>
+      </van-field>
     </div>
     <div class="button">
-      <button>提交</button>
+      <!-- #8 提交按钮样式可配置 -->
+      <button
+        :style="submitStyle"
+        :class="{ 'btn-square': datas.submitShape === 'square' }"
+      >
+        {{ datas.submitText || '提交' }}
+      </button>
     </div>
     <!-- 删除组件 -->
     <slot name="deles" />
@@ -97,9 +129,22 @@ export default {
   props: {
     datas: Object,
   },
+  computed: {
+    // #8 提交按钮样式
+    submitStyle() {
+      return {
+        background: this.datas.submitColor || '#155bd4',
+        borderRadius: this.datas.submitShape === 'square' ? '4px' : '20px',
+      }
+    },
+  },
   created() {},
   mounted() {},
   methods: {
+    // #8 渲染带必填星号的标签
+    renderLabel(item) {
+      return (item.required ? '* ' : '') + (item.name || '')
+    },
     //点击显示下拉框
     showpic(index1) {
       event.stopPropagation()
@@ -126,7 +171,6 @@ export default {
         el.showPicker = false
       })
     },
-    //
   },
   watch: {},
 }
@@ -150,7 +194,6 @@ form select {
   box-sizing: border-box;
   width: 100%;
   padding: 10px 16px;
-  // overflow: hidden;
   color: #323233;
   font-size: 14px;
   line-height: 24px;
@@ -161,6 +204,10 @@ form select {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+    .required-star {
+      color: #ee0a24;
+      margin-right: 2px;
+    }
   }
 }
 select {
@@ -176,31 +223,8 @@ select {
 :deep(.van-cell) {
   display: block;
 }
-:deep(.el-form-item__label) {
-  text-align: center;
-  width: 100% !important;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-:deep(.el-form-item__content) {
-  margin-left: 100% !important;
-}
-/* 上传图片按钮 */
-.uploadImg {
-  width: 200px;
-  height: 40px;
-  margin-top: 20px;
-}
-:deep(.van-radio),
-.van-checkbox {
-  padding: 4px 0px;
-}
 :deep(.van-field__label) {
   width: 100%;
-  // overflow: hidden;
-  // white-space: nowrap;
-  // text-overflow: ellipsis;
   padding-left: 10px;
   border-bottom: 1px solid #dddddd;
   padding-bottom: 10px;
@@ -216,13 +240,19 @@ select {
   padding: 12px 24px;
   button {
     width: 100%;
-    background: rgb(48, 116, 243);
     color: #fff;
     padding: 8px;
     border-radius: 20px;
     text-align: center;
     font-size: 14px;
     border: none;
+    transition: opacity 0.2s;
+    &:active {
+      opacity: 0.8;
+    }
+    &.btn-square {
+      border-radius: 4px;
+    }
   }
 }
 .select {

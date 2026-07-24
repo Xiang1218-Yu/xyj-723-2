@@ -9,11 +9,12 @@
         :active-color="datas.activeColor"
         :inactive-color="datas.inactiveColor"
       >
-        <van-tabbar-item 
+        <van-tabbar-item
           v-for="(item, index) in datas.iconList"
           :key="index"
           :name="item.iconName"
           :dot="item.isDot"
+          :badge="item.badge"
         >
           <span>{{ item.iconText }}</span>
           <template #icon="props">
@@ -49,32 +50,23 @@
 export default {
   name: 'tabBar',
   props: {
-    datas: Object
+    datas: Object,
   },
   data() {
     return {
-      active: 0
+      active: 0,
     }
   },
 
   created() {
-    console.log(this.datas, '--------------tabbar data  created')
     document.querySelector('.phone-container').style.cssText =
       'padding-bottom: 50px'
   },
 
-  mounted() {},
-
-  methods: {},
-
-  computed: {},
-
-  watch: {},
-
   beforeDestroy() {
     document.querySelector('.phone-container').style.cssText =
       'padding-bottom: 0px'
-  }
+  },
 }
 </script>
 

@@ -28,7 +28,7 @@
           draggable="false"
           :src="datas.imageList[index - 1].src"
           alt=""
-          :style="{ padding: datas.imgMargin / 2 + 'px' }"
+          :style="Object.assign({ padding: datas.imgMargin / 2 + 'px' }, imgStyle)"
         />
       </div>
     </section>
@@ -48,7 +48,7 @@
         }"
       >
       <!--    width: 33 - datas.imgMargin / 10 + '%', -->
-        <img draggable="false" :src="datas.imageList[index - 1].src" alt="" />
+        <img draggable="false" :src="datas.imageList[index - 1].src" alt="" :style="imgStyle" />
       </div>
     </section>
 
@@ -66,7 +66,7 @@
           width: 25 - datas.imgMargin / 10 + '%',
         }"
       >
-        <img draggable="false" :src="datas.imageList[index - 1].src" alt="" />
+        <img draggable="false" :src="datas.imageList[index - 1].src" alt="" :style="imgStyle" />
       </div>
     </section>
 
@@ -84,7 +84,7 @@
           draggable="false"
           :src="datas.imageList[index - 1].src"
           alt=""
-          :style="{ padding: datas.imgMargin + 'px' }"
+          :style="Object.assign({ padding: datas.imgMargin + 'px' }, imgStyle)"
         />
       </div>
     </section>
@@ -100,7 +100,7 @@
           :src="datas.imageList[0].src"
           alt=""
           style="height:300px"
-          :style="{ 'padding-right': datas.imgMargin + 'px' }"
+          :style="[{ 'padding-right': datas.imgMargin + 'px' }, imgStyle]"
         />
       </div>
       <div style="display: inline-flex; flex-direction: column; width: 100%">
@@ -115,7 +115,7 @@
             :src="datas.imageList[index].src"
             alt=""
             style="height:150px"
-            :style="{ padding: datas.imgMargin + 'px'}"
+            :style="[{ padding: datas.imgMargin + 'px'}, imgStyle]"
           />
         </div>
       </div>
@@ -131,7 +131,7 @@
           draggable="false"
           :src="datas.imageList[0].src"
           alt=""
-          :style="{ 'padding-bottom': datas.imgMargin + 'px' }"
+          :style="[{ 'padding-bottom': datas.imgMargin + 'px' }, imgStyle]"
         />
       </div>
       <div style="display: flex; width: 100%">
@@ -145,7 +145,7 @@
             draggable="false"
             :src="datas.imageList[index].src"
             alt=""
-            :style="{ padding: datas.imgMargin + 'px' }"
+            :style="[{ padding: datas.imgMargin + 'px' }, imgStyle]"
           />
         </div>
       </div>
@@ -163,7 +163,7 @@
           :src="datas.imageList[0].src"
           alt=""
           style="height:300px"
-          :style="{ 'padding-right': datas.imgMargin + 'px' }"
+          :style="[{ 'padding-right': datas.imgMargin + 'px' }, imgStyle]"
         />
       </div>
       <div style="display: inline-flex; flex-direction: column; width: 100%">
@@ -173,10 +173,7 @@
             draggable="false"
             :src="datas.imageList[1].src"
             alt=""
-            :style="{
-              'padding-bottom': datas.imgMargin + 'px',
-              'padding-left': datas.imgMargin + 'px',
-            }"
+            :style="[{ 'padding-bottom': datas.imgMargin + 'px', 'padding-left': datas.imgMargin + 'px' }, imgStyle]"
           />
         </div>
         <div class="rubiksCubeType">
@@ -196,10 +193,7 @@
               :src="datas.imageList[index + 1].src"
               alt=""
               style="height:150px"
-              :style="{
-                'padding-left': datas.imgMargin + 'px',
-                'padding-top': datas.imgMargin + 'px',
-              }"
+              :style="[{ 'padding-left': datas.imgMargin + 'px', 'padding-top': datas.imgMargin + 'px' }, imgStyle]"
             />
           </div>
         </div>
@@ -248,6 +242,15 @@ export default {
         return false
 
       return true
+    },
+    // #9 图片通用样式（圆角 + 比例）
+    imgStyle() {
+      const ratio = (this.datas.aspectRatio || '1:1').split(':')
+      const r = ratio.length === 2 ? Number(ratio[1]) / Number(ratio[0]) : 1
+      return {
+        'border-radius': (this.datas.borderRadius || 0) + 'px',
+        // aspect-ratio 用于容器；img 本身铺满
+      }
     },
   },
 }
