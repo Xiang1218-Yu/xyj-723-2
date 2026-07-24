@@ -58,7 +58,11 @@
         v-for="(item, index) in datas.imageList"
         :key="index"
         :style="{
-          width: datas.imgStyle === 0 ? '20%' : 375 / datas.showSize - 1 + 'px',
+          width: datas.cardStyle
+            ? '50%'
+            : datas.imgStyle === 0
+            ? 100 / (datas.showSize || 5) + '%'
+            : 375 / (datas.showSize || 5) - 1 + 'px',
         }"
       >
         <!-- 图片包裹层：用于承载角标与图标形状 -->
@@ -192,6 +196,10 @@ export default {
     &.card-mode {
       padding: 8px;
       box-sizing: border-box;
+      /* 卡片模式强制换行，保证两列大图卡片正常排布 */
+      flex-wrap: wrap !important;
+      display: flex !important;
+      overflow-x: hidden !important;
     }
     .navigationList.card-item {
       padding: 6px;

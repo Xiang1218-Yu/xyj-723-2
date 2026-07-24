@@ -136,7 +136,7 @@
         >
           <van-radio
             :name="opt"
-            v-for="(opt, oIndex) in field.options"
+            v-for="(opt, oIndex) in field.options || []"
             :key="oIndex"
             >{{ opt }}</van-radio
           >
@@ -148,9 +148,9 @@
       <!-- F8 新增：提交按钮应用背景/文字色/圆角，点击执行必填校验 -->
       <button
         :style="{
-          background: datas.submitBgColor,
-          color: datas.submitTextColor,
-          'border-radius': datas.submitRadius + 'px',
+          background: datas.submitBgColor || '#155bd4',
+          color: datas.submitTextColor || '#ffffff',
+          'border-radius': (datas.submitRadius != null ? datas.submitRadius : 4) + 'px',
         }"
         @click="submitForm"
       >

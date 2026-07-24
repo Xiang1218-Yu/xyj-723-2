@@ -181,12 +181,13 @@ export default {
           }
 
           let params = {
-            loop: this.datas.loop, // 是否循环播放
-            // 自动播放：开启时使用配置的间隔时长，关闭时为 false
-            autoplay: this.datas.autoplay
-              ? { delay: this.datas.autoplayDelay }
-              : false,
-            effect: this.datas.effect, // 过渡效果 slide/fade/cube/coverflow/flip
+            loop: this.datas.loop !== false, // 是否循环播放(默认循环)
+            // 自动播放：开启时使用配置的间隔时长(兜底 3000)，关闭时为 false
+            autoplay:
+              this.datas.autoplay !== false
+                ? { delay: Number(this.datas.autoplayDelay) || 3000 }
+                : false,
+            effect: this.datas.effect || 'slide', // 过渡效果 slide/fade/cube/coverflow/flip
             pagination: {
               el: '.swiper-pagination',
               type: this.pagingType,

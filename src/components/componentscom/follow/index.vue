@@ -18,7 +18,7 @@
           :color="datas.isFollowed ? '#c8c9cc' : '#07C160'"
           @click="toggleFollow"
         >
-          {{ datas.isFollowed ? datas.followedBtnText : datas.followBtnText }}
+          {{ datas.isFollowed ? (datas.followedBtnText || '已关注') : (datas.followBtnText || '关注') }}
         </van-button>
         <!-- 原关注公众号按钮：当不显示可切换按钮时兜底展示 -->
         <van-button v-else color="#07C160">关注公众号</van-button>

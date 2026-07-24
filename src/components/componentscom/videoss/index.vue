@@ -13,7 +13,7 @@
         :poster="datas.coverUrl"
         :loop="datas.loop"
         :muted="datas.muted"
-        :controls="datas.controls"
+        :controls="datas.controls !== false"
       ></video>
     </section>
 

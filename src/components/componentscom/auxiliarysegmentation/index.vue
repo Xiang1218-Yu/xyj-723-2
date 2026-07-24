@@ -17,13 +17,13 @@
         <!-- 显示文字模式：左右各一条线夹住中间文字 -->
         <template v-if="datas.showText">
           <span class="line-seg" :style="segLineStyle" />
-          <span class="line-text" :style="{ color: datas.textColor }">
+          <span class="line-text" :style="{ color: datas.textColor || 'rgb(150, 151, 153)' }">
             <!-- 可选前导图标 -->
             <i
               v-if="datas.textIcon"
               class="iconfont"
               :class="datas.textIcon"
-              :style="{ color: datas.textColor }"
+              :style="{ color: datas.textColor || 'rgb(150, 151, 153)' }"
             />
             {{ datas.lineText }}
           </span>
@@ -49,12 +49,15 @@ export default {
     // F12：根据 lineStyle 计算分割线样式
     segLineStyle() {
       const style = this.datas.lineStyle || 'solid'
-      const color = this.datas.auxliarColor
+      // 颜色兜底，避免导入旧数据缺失字段时无颜色
+      const color = this.datas.auxliarColor || 'rgb(229, 229, 229)'
       if (style === 'gradient') {
-        // 渐变：用 linear-gradient 背景细条
+        // 渐变：用 linear-gradient 背景细条，起止色均做默认值回退
+        const start = this.datas.gradientStart || 'rgb(255, 106, 0)'
+        const end = this.datas.gradientEnd || 'rgb(238, 0, 255)'
         return {
           height: '2px',
-          background: `linear-gradient(to right, ${this.datas.gradientStart}, ${this.datas.gradientEnd})`,
+          background: `linear-gradient(to right, ${start}, ${end})`,
           border: 'none',
         }
       }

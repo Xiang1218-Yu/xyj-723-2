@@ -18,9 +18,9 @@
         v-for="(item, index) in datas.mockList"
         :key="index"
         :style="{
-          width: 'calc(' + 100 / (datas.columns || 2) + '% - ' + datas.commodityMargin + 'px)',
-          margin: datas.commodityMargin / 2 + 'px',
-          'border-radius': datas.borderRadius + 'px',
+          width: 'calc(' + 100 / (datas.columns || 2) + '% - ' + (datas.commodityMargin || 0) + 'px)',
+          margin: (datas.commodityMargin || 0) / 2 + 'px',
+          'border-radius': (datas.borderRadius || 0) + 'px',
           'box-shadow': datas.cardShadow ? '0 2px 8px rgba(93,113,127,0.25)' : 'none',
         }"
       >
@@ -53,7 +53,7 @@
           </h5>
           <div class="mock-bottom">
             <span class="mock-price"><i>￥</i>{{ item.price }}</span>
-            <em class="mock-btn">{{ datas.buttonText }}</em>
+            <em class="mock-btn">{{ datas.buttonText || '马上抢' }}</em>
           </div>
         </div>
       </div>

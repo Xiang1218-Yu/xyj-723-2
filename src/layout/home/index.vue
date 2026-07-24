@@ -377,7 +377,48 @@ ${styles}
 }
 
 /**
+ * F16：预检测图片是否可跨域加载（用于导出降级）
+ * 尝试以 crossOrigin='anonymous' 加载图片，成功说明可安全绘制到 canvas，
+ * 失败(跨域未授权/加载超时)则收集其 src，导出时对这些图片做降级处理。
+ *
+ * @param {HTMLElement} root 需要截图的根节点
+ * @returns {Promise<Set<string>>} 无法安全导出的图片 src 集合
+ */
+const detectUnsafeImages = (root) => {
+  const imgs = Array.from(root.querySelectorAll('img')).filter((i) => i.src)
+  return Promise.all(
+    imgs.map(
+      (img) =>
+        new Promise((resolve) => {
+          // 同源图片直接视为安全
+          try {
+            const u = new URL(img.src, window.location.href)
+            if (u.origin === window.location.origin) return resolve(null)
+          } catch (e) {
+            return resolve(null)
+          }
+          const test = new Image()
+          test.crossOrigin = 'anonymous'
+          // 3 秒超时视为不可安全导出
+          const timer = setTimeout(() => resolve(img.src), 3000)
+          test.onload = () => {
+            clearTimeout(timer)
+            resolve(null)
+          }
+          test.onerror = () => {
+            clearTimeout(timer)
+            resolve(img.src) // 跨域失败，标记为不安全
+          }
+          test.src = img.src
+        })
+    )
+  ).then((results) => new Set(results.filter(Boolean)))
+}
+
+/**
  * F16：导出 PNG 长图 —— 用 html2canvas 对整块手机预览区域截图，导出为 PNG
+ * 对跨域图片做降级处理：无法安全加载的图片在克隆节点中替换为灰底占位，
+ * 避免 canvas 被污染(tainted)导致导出彻底失败。
  */
 const exportImage = async () => {
   const el = document.getElementById('imageTofile')
@@ -387,10 +428,26 @@ const exportImage = async () => {
   }
   exporting.value = true
   try {
+    // 预检测跨域不可导出的图片
+    const unsafe = await detectUnsafeImages(el)
+    if (unsafe.size) {
+      ElMessage.warning(`存在 ${unsafe.size} 张跨域图片，已用占位图降级导出`)
+    }
     const canvas = await html2canvas(el, {
       useCORS: true, // 允许跨域图片(需图片服务支持 CORS)
+      allowTaint: false, // 不允许污染画布，保证 toBlob 可用
       scale: 2, // 2 倍分辨率，长图更清晰
       backgroundColor: '#ffffff',
+      imageTimeout: 8000, // 图片加载超时(ms)
+      // 克隆阶段对不安全图片做降级：替换为灰底占位，避免污染画布
+      onclone: (doc) => {
+        doc.querySelectorAll('img').forEach((img) => {
+          if (unsafe.has(img.src)) {
+            img.removeAttribute('src')
+            img.style.background = '#f2f4f6'
+          }
+        })
+      },
     })
     // canvas 转 blob 后下载
     canvas.toBlob((blob) => {
@@ -404,7 +461,7 @@ const exportImage = async () => {
     })
   } catch (e) {
     console.error('导出长图失败', e)
-    ElMessage.error('导出长图失败，可能存在跨域图片')
+    ElMessage.error('导出长图失败，请检查图片资源是否可访问')
     exporting.value = false
   }
 }
