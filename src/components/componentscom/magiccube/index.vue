@@ -4,6 +4,9 @@
     :style="{
       'padding-left': datas.pageMargin + 'px',
       'padding-right': datas.pageMargin + 'px',
+      /* F9 新增：通过 CSS 变量下发圆角与宽高比，供内部图片统一使用 */
+      '--mc-radius': datas.borderRadius + 'px',
+      '--mc-aspect': aspectRatioCss,
     }"
   >
     <img
@@ -218,6 +221,11 @@ export default {
     datas: Object,
   },
   computed: {
+    // F9 新增：将 '1:1' 形式的比例转换为 css aspect-ratio 的 '1 / 1' 形式
+    aspectRatioCss() {
+      const ratio = this.datas.aspectRatio || '1:1'
+      return ratio.replace(':', ' / ')
+    },
     showimageList() {
       if (
         this.datas.rubiksCubeType === 0 &&
@@ -256,6 +264,19 @@ export default {
 <style scoped lang="less">
 .magiccube {
   position: relative;
+  /* F9 新增：所有魔方图片统一应用圆角（由 --mc-radius 变量控制） */
+  img {
+    border-radius: var(--mc-radius, 0);
+  }
+  /* F9 新增：一行 N 个的行布局图片按宽高比展示（由 --mc-aspect 变量控制） */
+  .buju0 {
+    .rubiksCubeType0 img,
+    .rubiksCubeType1 img,
+    .rubiksCubeType2 img {
+      aspect-ratio: var(--mc-aspect, 1 / 1);
+      object-fit: cover;
+    }
+  }
   /* 布局 */
   .imgone {
     &:last-of-type {

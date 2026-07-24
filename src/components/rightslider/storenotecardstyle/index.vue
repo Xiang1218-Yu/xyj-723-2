@@ -241,6 +241,165 @@
           </el-input>
         </div>
       </el-form-item>
+
+      <div class="bor" />
+
+      <!-- F14 新增：文章编辑器区块 -->
+      <h5 style="color: #000; font-size: 14px">文章编辑器</h5>
+
+      <!-- 作者显示开关 -->
+      <el-form-item class="lef" label="显示作者" style="margin-top: 10px">
+        {{ datas.authorEditable ? '显示' : '隐藏' }}
+        <el-checkbox
+          style="margin-left: 196px"
+          v-model="datas.authorEditable"
+        />
+      </el-form-item>
+
+      <p style="color: #969799; font-size: 12px; margin: 10px 0">
+        鼠标拖拽调整文章顺序
+      </p>
+
+      <!-- 文章列表拖拽编辑 -->
+      <vuedraggable
+        :list="datas.articleList"
+        item-key="index"
+        :forceFallback="true"
+        :animation="200"
+        handle=".article-drag"
+      >
+        <template #item="{ element, index }">
+          <section class="articleEditor">
+            <!-- 删除文章 -->
+            <van-icon
+              class="el-icon-circle-close"
+              name="close"
+              @click="deleteArticle(index)"
+            />
+            <!-- 拖拽把手 -->
+            <p class="article-drag article-title-row">
+              <span class="drag-tip">文章 {{ index + 1 }}（可拖拽）</span>
+            </p>
+
+            <!-- 标题 -->
+            <el-input
+              v-model="element.title"
+              maxlength="30"
+              placeholder="文章标题"
+              @input="checkArticleTitle(index)"
+            />
+
+            <!-- 标签编辑（el-tag + 输入新增） -->
+            <div class="article-labels">
+              <el-tag
+                v-for="(label, labelIdx) in element.labels"
+                :key="labelIdx"
+                closable
+                @close="removeLabel(index, labelIdx)"
+                style="margin: 4px 6px 4px 0"
+              >
+                {{ label }}
+              </el-tag>
+              <el-input
+                v-if="labelInputIndex === index"
+                ref="labelInput"
+                v-model="labelInputValue"
+                size="small"
+                style="width: 90px"
+                maxlength="8"
+                @keyup.enter="confirmLabel(index)"
+                @blur="confirmLabel(index)"
+              />
+              <el-button
+                v-else
+                size="small"
+                @click="showLabelInput(index)"
+              >
+                + 标签
+              </el-button>
+            </div>
+
+            <!-- 阅读数 / 点赞数 -->
+            <div class="article-stat">
+              <div class="stat-item">
+                <span>阅读数</span>
+                <el-input-number
+                  v-model="element.readCount"
+                  :min="0"
+                  :step="1"
+                  size="small"
+                  controls-position="right"
+                  @change="checkNumber(index, 'readCount')"
+                />
+              </div>
+              <div class="stat-item">
+                <span>点赞数</span>
+                <el-input-number
+                  v-model="element.praiseCount"
+                  :min="0"
+                  :step="1"
+                  size="small"
+                  controls-position="right"
+                  @change="checkNumber(index, 'praiseCount')"
+                />
+              </div>
+            </div>
+
+            <!-- 作者 + 作者头像 -->
+            <div class="article-author" v-if="datas.authorEditable">
+              <div class="author-avatar" @click="showAvatarUpload(index)">
+                <img
+                  v-if="element.authorAvatar"
+                  :src="element.authorAvatar"
+                  alt=""
+                  draggable="false"
+                />
+                <span v-else>头像</span>
+              </div>
+              <el-input
+                v-model="element.author"
+                maxlength="12"
+                placeholder="作者名称"
+                @input="checkAuthor(index)"
+              />
+            </div>
+
+            <!-- 多图：可拖拽排序 + 删除 + 添加 -->
+            <div class="article-images">
+              <vuedraggable
+                :list="element.images"
+                item-key="imgIndex"
+                :forceFallback="true"
+                :animation="200"
+                class="image-drag-box"
+              >
+                <template #item="{ element: img, index: imgIdx }">
+                  <div class="image-item">
+                    <img :src="img" alt="" draggable="false" />
+                    <van-icon
+                      class="img-close"
+                      name="close"
+                      @click="deleteArticleImage(index, imgIdx)"
+                    />
+                  </div>
+                </template>
+              </vuedraggable>
+              <!-- 添加图片 -->
+              <div class="image-add" @click="showImageUpload(index)">+</div>
+            </div>
+          </section>
+        </template>
+      </vuedraggable>
+
+      <!-- 添加文章 -->
+      <el-button
+        @click="addArticle"
+        class="uploadImg"
+        type="primary"
+        plain
+      >
+        添加文章
+      </el-button>
     </el-form>
 
     <!-- 上传图片 -->
@@ -249,6 +408,7 @@
 </template>
 
 <script>
+import { ElMessage } from 'element-plus' // F14 新增：消息提示
 import vuedraggable from 'vuedraggable' //拖拽组件
 import uploadimg from '../../uploadImg' //图片上传
 
@@ -336,6 +496,11 @@ export default {
       ], // 选择跳转类型
       options: [], //后端返回的列表提供下拉选择
       emptyText: '',
+      // F14 新增：标签输入临时状态
+      labelInputIndex: null, //当前正在输入标签的文章下标
+      labelInputValue: '', //标签输入框的值
+      // F14 新增：图片上传目标 { article: 文章下标, type: 'image' | 'avatar' }，null 表示原卡片图片上传
+      articleUploadTarget: null,
     }
   },
   created() {},
@@ -348,6 +513,18 @@ export default {
     },
     // 提交
     uploadInformation(res) {
+      // F14 新增：区分文章图片/作者头像上传
+      if (this.articleUploadTarget) {
+        const { article, type } = this.articleUploadTarget
+        if (type === 'avatar') {
+          this.datas.articleList[article].authorAvatar = res
+        } else {
+          this.datas.articleList[article].images.push(res)
+        }
+        this.articleUploadTarget = null
+        return
+      }
+      // 原有卡片图片上传逻辑
       this.datas.imageList.push({
         src: res,
         text: '这里显示笔记标题最多显示2行',
@@ -359,6 +536,96 @@ export default {
     /* 删除图片 */
     deleteimg(index) {
       this.datas.imageList.splice(index, 1)
+    },
+
+    /* ============ F14 新增：文章编辑器相关方法 ============ */
+
+    // 添加文章
+    addArticle() {
+      this.datas.articleList.push({
+        title: '',
+        labels: [],
+        readCount: 0,
+        praiseCount: 0,
+        author: '',
+        authorAvatar: '',
+        images: [],
+      })
+    },
+
+    // 删除文章
+    deleteArticle(index) {
+      this.datas.articleList.splice(index, 1)
+    },
+
+    // 显示标签输入框
+    showLabelInput(index) {
+      this.labelInputIndex = index
+      this.labelInputValue = ''
+    },
+
+    // 确认新增标签（校验每个标签 <=8）
+    confirmLabel(index) {
+      const value = (this.labelInputValue || '').trim()
+      if (value) {
+        if (value.length > 8) {
+          ElMessage.warning('每个标签最多 8 个字符')
+        } else {
+          this.datas.articleList[index].labels.push(value)
+        }
+      }
+      this.labelInputValue = ''
+      this.labelInputIndex = null
+    },
+
+    // 删除标签
+    removeLabel(index, labelIdx) {
+      this.datas.articleList[index].labels.splice(labelIdx, 1)
+    },
+
+    // 显示作者头像上传
+    showAvatarUpload(index) {
+      this.articleUploadTarget = { article: index, type: 'avatar' }
+      this.$refs.upload.showUpload()
+    },
+
+    // 显示文章多图上传
+    showImageUpload(index) {
+      this.articleUploadTarget = { article: index, type: 'image' }
+      this.$refs.upload.showUpload()
+    },
+
+    // 删除文章图片
+    deleteArticleImage(index, imgIdx) {
+      this.datas.articleList[index].images.splice(imgIdx, 1)
+    },
+
+    // 校验文章标题 <=30
+    checkArticleTitle(index) {
+      const item = this.datas.articleList[index]
+      if (item.title && item.title.length > 30) {
+        item.title = item.title.slice(0, 30)
+        ElMessage.warning('文章标题最多 30 个字符')
+      }
+    },
+
+    // 校验作者 <=12
+    checkAuthor(index) {
+      const item = this.datas.articleList[index]
+      if (item.author && item.author.length > 12) {
+        item.author = item.author.slice(0, 12)
+        ElMessage.warning('作者名称最多 12 个字符')
+      }
+    },
+
+    // 校验阅读数/点赞数为 >=0 的数字
+    checkNumber(index, field) {
+      const item = this.datas.articleList[index]
+      const val = Number(item[field])
+      if (isNaN(val) || val < 0) {
+        item[field] = 0
+        ElMessage.warning('请输入大于等于 0 的数字')
+      }
     },
   },
   computed: {
@@ -591,6 +858,136 @@ export default {
   .tit {
     :deep(.el-input__inner) {
       text-align: center;
+    }
+  }
+
+  /* F14 新增：文章编辑器样式 */
+  .articleEditor {
+    padding: 12px;
+    margin: 16px 7px;
+    border-radius: 2px;
+    background-color: #fff;
+    box-shadow: 0 0 4px 0 rgba(10, 42, 97, 0.2);
+    position: relative;
+
+    /* 删除图标 */
+    .el-icon-circle-close {
+      position: absolute;
+      right: -10px;
+      top: -10px;
+      cursor: pointer;
+      font-size: 19px;
+    }
+
+    /* 拖拽提示行 */
+    .article-title-row {
+      margin-bottom: 8px;
+      cursor: move;
+      .drag-tip {
+        font-size: 12px;
+        color: #969799;
+      }
+    }
+
+    /* 标签编辑 */
+    .article-labels {
+      margin: 8px 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    /* 阅读/点赞 */
+    .article-stat {
+      display: flex;
+      justify-content: space-between;
+      margin: 8px 0;
+      .stat-item {
+        display: flex;
+        flex-direction: column;
+        span {
+          font-size: 12px;
+          color: #646566;
+          margin-bottom: 4px;
+        }
+      }
+    }
+
+    /* 作者 */
+    .article-author {
+      display: flex;
+      align-items: center;
+      margin: 8px 0;
+      .author-avatar {
+        width: 40px;
+        height: 40px;
+        flex: none;
+        margin-right: 10px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: #f2f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+        span {
+          font-size: 12px;
+          color: #969799;
+        }
+      }
+    }
+
+    /* 多图编辑 */
+    .article-images {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 8px;
+      .image-drag-box {
+        display: flex;
+        flex-wrap: wrap;
+      }
+      .image-item {
+        width: 60px;
+        height: 60px;
+        margin: 0 8px 8px 0;
+        position: relative;
+        border-radius: 4px;
+        overflow: hidden;
+        img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+        .img-close {
+          position: absolute;
+          right: 0;
+          top: 0;
+          background: rgba(0, 0, 0, 0.5);
+          color: #fff;
+          font-size: 12px;
+          cursor: pointer;
+          border-radius: 0 0 0 4px;
+        }
+      }
+      .image-add {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 8px;
+        border: 1px dashed #dcdee0;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #969799;
+        cursor: pointer;
+      }
     }
   }
 }

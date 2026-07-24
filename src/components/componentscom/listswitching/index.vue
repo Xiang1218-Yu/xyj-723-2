@@ -4,6 +4,61 @@
     :ref="listSwitchName"
     :style="{ backgroundImage: 'url(' + datas.bgImg + ')' }"
   >
+    <!-- F4 新增：Mock 商品展示区（编辑器预览），有 mockList 数据时按 columns 列渲染卡片 -->
+    <div
+      class="mock-preview"
+      v-if="datas.mockList && datas.mockList.length"
+      :style="{
+        'padding-left': datas.pageMargin + 'px',
+        'padding-right': datas.pageMargin + 'px',
+      }"
+    >
+      <div
+        class="mock-card"
+        v-for="(item, index) in datas.mockList"
+        :key="index"
+        :style="{
+          width: 'calc(' + 100 / (datas.columns || 2) + '% - ' + datas.commodityMargin + 'px)',
+          margin: datas.commodityMargin / 2 + 'px',
+          'border-radius': datas.borderRadius + 'px',
+          'box-shadow': datas.cardShadow ? '0 2px 8px rgba(93,113,127,0.25)' : 'none',
+        }"
+      >
+        <!-- 商品图片 -->
+        <div class="mock-pic">
+          <img
+            v-if="item.img"
+            draggable="false"
+            :src="item.img"
+            alt=""
+            :style="{ 'border-radius': datas.borderRadius + 'px' }"
+          />
+          <img
+            v-else
+            draggable="false"
+            src="../../../assets/images/imgs.png"
+            alt=""
+            :style="{ 'border-radius': datas.borderRadius + 'px' }"
+          />
+        </div>
+        <!-- 商品信息 -->
+        <div class="mock-info">
+          <h5
+            :style="{
+              'font-weight': datas.textWeight,
+              'text-align': datas.positions === 'center' ? 'center' : '',
+            }"
+          >
+            {{ item.title }}
+          </h5>
+          <div class="mock-bottom">
+            <span class="mock-price"><i>￥</i>{{ item.price }}</span>
+            <em class="mock-btn">{{ datas.buttonText }}</em>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- 没有视频展示默认 -->
     <!-- 类型一 -->
     <div
@@ -1116,6 +1171,59 @@ export default {
   background-repeat: no-repeat;
   background-size: 100% 100%;
   padding: 10px 0;
+  /* F4 新增：Mock 商品预览区，按 columns 列 flex 排列卡片 */
+  .mock-preview {
+    display: flex;
+    flex-wrap: wrap;
+    box-sizing: border-box;
+    .mock-card {
+      box-sizing: border-box;
+      background: #fff;
+      overflow: hidden;
+      .mock-pic {
+        width: 100%;
+        height: 120px;
+        img {
+          width: 100%;
+          height: 100%;
+          display: block;
+          object-fit: cover;
+        }
+      }
+      .mock-info {
+        padding: 8px;
+        h5 {
+          font-size: 14px;
+          line-height: 20px;
+          margin: 0 0 6px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+        .mock-bottom {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          .mock-price {
+            color: #ee0a24;
+            font-size: 16px;
+            i {
+              font-size: 12px;
+            }
+          }
+          .mock-btn {
+            font-style: normal;
+            padding: 3px 10px;
+            font-size: 12px;
+            color: #fff;
+            background-color: #ee0a24;
+            border-radius: 12px;
+            white-space: nowrap;
+          }
+        }
+      }
+    }
+  }
   .more {
     margin-top: 10px;
     height: 25px;

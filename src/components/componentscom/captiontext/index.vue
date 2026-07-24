@@ -23,17 +23,48 @@
         }"
         v-if="datas.name"
       >
+        <!-- F7 新增：标题左侧图标（http 链接用 img，否则当作 iconfont 类名，非空才显示） -->
+        <img
+          v-if="datas.leftIcon && isImgLink(datas.leftIcon)"
+          class="left-icon-img"
+          :src="datas.leftIcon"
+          alt=""
+          draggable="false"
+        />
+        <i
+          v-else-if="datas.leftIcon"
+          class="iconfont left-icon-font"
+          :class="datas.leftIcon"
+        />
         {{ datas.name }}
       </h2>
 
       <!-- 描述文字 -->
+      <!-- F7 新增：descGradient 为真时用线性渐变实现渐变文字 -->
       <p
-        :style="{
-          'font-size': datas.descriptionSize + 'px',
-          'font-weight': datas.descriptionWeight,
-          color: datas.descriptionColor,
-          'text-align': datas.positions,
-        }"
+        :style="[
+          {
+            'font-size': datas.descriptionSize + 'px',
+            'font-weight': datas.descriptionWeight,
+            'text-align': datas.positions,
+          },
+          datas.descGradient
+            ? {
+                background:
+                  'linear-gradient(' +
+                  datas.descGradientAngle +
+                  'deg, ' +
+                  datas.descGradientStart +
+                  ', ' +
+                  datas.descGradientEnd +
+                  ')',
+                '-webkit-background-clip': 'text',
+                'background-clip': 'text',
+                '-webkit-text-fill-color': 'transparent',
+                color: 'transparent',
+              }
+            : { color: datas.descriptionColor },
+        ]"
         style="margin-top: 8px"
         v-if="datas.description"
       >
@@ -66,6 +97,12 @@ export default {
   props: {
     datas: Object,
   },
+  methods: {
+    // F7 新增：判断 leftIcon 是否为 http(s) 图片链接
+    isImgLink(icon) {
+      return /^https?:\/\//i.test(icon)
+    },
+  },
 }
 </script>
 
@@ -82,6 +119,19 @@ export default {
   p {
     word-wrap: break-word;
     min-height: 10px;
+  }
+
+  /* F7 新增：标题左侧图标样式（图片与 iconfont 类名两种） */
+  .left-icon-img {
+    height: 1em;
+    width: auto;
+    vertical-align: -0.15em;
+    margin-right: 6px;
+    display: inline-block;
+  }
+  .left-icon-font {
+    margin-right: 6px;
+    font-size: inherit;
   }
 
   /* 更多 */

@@ -15,6 +15,82 @@
 
       <div style="height: 10px" />
 
+      <!-- F6 新增：多条公告列表编辑（可增删，每条最长 50 字符） -->
+      <el-form-item label="多条公告" class="lef" />
+      <div class="notice-list">
+        <div
+          class="notice-list-item"
+          v-for="(item, index) in datas.noticeList"
+          :key="index"
+        >
+          <el-input
+            :model-value="item"
+            maxlength="50"
+            show-word-limit
+            placeholder="请输入公告内容"
+            @update:model-value="updateNotice(index, $event)"
+          />
+          <!-- 删除当前公告 -->
+          <van-icon
+            name="delete-o"
+            class="del-icon"
+            @click="deleteNotice(index)"
+          />
+        </div>
+        <!-- 添加公告按钮 -->
+        <el-button
+          class="add-btn"
+          type="primary"
+          plain
+          @click="addNotice"
+          >添加公告</el-button
+        >
+      </div>
+
+      <div style="height: 10px" />
+
+      <!-- F6 新增：滚动方向选择 -->
+      <el-form-item label="滚动方向" class="lef">
+        <el-radio-group v-model="datas.direction">
+          <el-radio label="horizontal">横向</el-radio>
+          <el-radio label="vertical">纵向</el-radio>
+        </el-radio-group>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- F6 新增：滚动速度(10-200) -->
+      <el-form-item label="滚动速度" class="lef">
+        <el-slider
+          v-model="datas.speed"
+          :min="10"
+          :max="200"
+          input-size="small"
+          show-input
+          @change="checkSpeed"
+        >
+        </el-slider>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- F6 新增：前导图标开关 + 图标名称 -->
+      <el-form-item label="前导图标" class="lef">
+        <el-checkbox v-model="datas.showLeadingIcon">显示</el-checkbox>
+      </el-form-item>
+      <el-form-item
+        label="图标名称"
+        class="lef"
+        v-show="datas.showLeadingIcon"
+      >
+        <el-input
+          v-model="datas.leadingIcon"
+          placeholder="请输入 vant 图标名，如 volume-o"
+        />
+      </el-form-item>
+
+      <div style="height: 10px" />
+
       <!-- 背景颜色 -->
       <el-form-item label="背景颜色" class="lef">
         <!-- 颜色选择器 -->
@@ -45,6 +121,8 @@
 </template>
 
 <script>
+import { ElMessage } from 'element-plus' // F6 新增：非法输入提示
+
 export default {
   name: 'noticestyle',
   props: {
@@ -81,6 +159,35 @@ export default {
       ],
     }
   },
+  methods: {
+    // F6 新增：更新指定公告并做长度校验(<=50)
+    updateNotice(index, val) {
+      if (val && val.length > 50) {
+        ElMessage.warning('每条公告最长 50 个字符')
+        val = val.slice(0, 50)
+      }
+      this.datas.noticeList[index] = val
+    },
+    // F6 新增：新增一条公告
+    addNotice() {
+      if (!Array.isArray(this.datas.noticeList)) {
+        this.datas.noticeList = []
+      }
+      this.datas.noticeList.push('请填写公告内容')
+    },
+    // F6 新增：删除一条公告
+    deleteNotice(index) {
+      this.datas.noticeList.splice(index, 1)
+    },
+    // F6 新增：速度范围校验(10-200)
+    checkSpeed(val) {
+      let s = Number(val)
+      if (isNaN(s) || s < 10 || s > 200) {
+        ElMessage.warning('滚动速度需在 10-200 之间')
+        this.datas.speed = Math.min(200, Math.max(10, isNaN(s) ? 40 : s))
+      }
+    },
+  },
 }
 </script>
 
@@ -111,6 +218,24 @@ export default {
   /* 颜色选择器 */
   .picke {
     float: right;
+  }
+
+  /* F6 新增：多条公告列表样式 */
+  .notice-list {
+    .notice-list-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+      .del-icon {
+        margin-left: 8px;
+        color: red;
+        cursor: pointer;
+        font-size: 18px;
+      }
+    }
+    .add-btn {
+      width: 100%;
+    }
   }
 }
 </style>

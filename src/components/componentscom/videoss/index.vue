@@ -9,9 +9,11 @@
     <section v-else style="position: relative">
       <video
         :src="datas.src"
-        controls
         :autoplay="datas.autoplay"
         :poster="datas.coverUrl"
+        :loop="datas.loop"
+        :muted="datas.muted"
+        :controls="datas.controls"
       ></video>
     </section>
 

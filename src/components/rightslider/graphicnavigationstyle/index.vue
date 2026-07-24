@@ -16,7 +16,7 @@
         :forceFallback="true"
         :animation="200"
       >
-        <template #item="{ element }">
+        <template #item="{ element, index }">
           <section class="imgList">
             <van-icon
               class="el-icon-circle-close"
@@ -41,10 +41,10 @@
                   placeholder="请选择跳转类型"
                 >
                   <el-option
-                    v-for="element in optionsType"
-                    :key="element.name"
-                    :label="element.name"
-                    :value="element.type"
+                    v-for="opt in optionsType"
+                    :key="opt.name"
+                    :label="opt.name"
+                    :value="opt.type"
                   >
                   </el-option>
                 </el-select>
@@ -56,6 +56,19 @@
                   v-model="element.http.externalLink"
                 >
                 </el-input>
+              </div>
+              <!-- F11 新增：角标(无/HOT/NEW)，写入 item.corner -->
+              <div class="corner-select">
+                <span class="corner-label">角标</span>
+                <el-select
+                  style="width: 100%"
+                  v-model="element.corner"
+                  placeholder="无角标"
+                >
+                  <el-option label="无" value="" />
+                  <el-option label="HOT" value="HOT" />
+                  <el-option label="NEW" value="NEW" />
+                </el-select>
               </div>
             </div>
           </section> </template
@@ -82,6 +95,24 @@
             :key="index"
             >{{ index === 1 ? '图片导航' : '文字导航' }}</el-radio
           >
+        </el-radio-group>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- F11 新增：大图卡片样式开关 -->
+      <el-form-item class="lef" label="卡片样式">
+        <el-checkbox v-model="datas.cardStyle">启用大图卡片样式</el-checkbox>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- F11 新增：图标形状(方形/圆形/圆角) -->
+      <el-form-item class="lef" label="图标形状">
+        <el-radio-group v-model="datas.iconShape">
+          <el-radio label="square">方形</el-radio>
+          <el-radio label="circle">圆形</el-radio>
+          <el-radio label="round">圆角</el-radio>
         </el-radio-group>
       </el-form-item>
 
@@ -282,6 +313,7 @@ export default {
           src: res,
           text: '',
           http: {},
+          corner: '', // F11：角标默认无
         })
         console.log(this.datas.imageList, 33333333333333)
       } else if (this.uploadImgDataType === '1') {
@@ -398,6 +430,18 @@ export default {
               text-overflow: ellipsis;
             }
           }
+        }
+      }
+      /* F11：角标选择区 */
+      .corner-select {
+        display: flex;
+        align-items: center;
+        margin-top: 6px;
+        .corner-label {
+          font-size: 12px;
+          color: #969799;
+          margin-right: 8px;
+          white-space: nowrap;
         }
       }
     }

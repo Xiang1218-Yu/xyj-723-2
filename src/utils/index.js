@@ -121,6 +121,50 @@ class utils {
     }
     return obj
   }
+
+  /**
+   * F16 新增：字段补全 —— 以默认模板为基准，用导入数据覆盖，缺失字段用默认值补齐。
+   * 用于导入旧版本 JSON 时做版本迁移，保证新版本新增的字段不会缺失导致渲染异常。
+   *
+   * @param {Object} defaults 默认模板(来自 componentProperties)
+   * @param {Object} data 导入的数据
+   * @returns {Object} 补全后的新对象(导入值优先，默认值兜底)
+   */
+  completeFields(defaults, data) {
+    // 默认值不是对象则直接返回导入值(导入值为 undefined 时用默认值)
+    if (this.getObjClass(defaults) !== 'Object') {
+      return data === undefined ? defaults : data
+    }
+    // 导入数据缺失或非对象，直接深拷贝默认值
+    if (this.getObjClass(data) !== 'Object') {
+      return this.deepClone(defaults)
+    }
+    const result = {}
+    // 以默认模板的字段为基准补全
+    for (let key in defaults) {
+      if (data.hasOwnProperty(key)) {
+        const dv = defaults[key]
+        const iv = data[key]
+        if (this.getObjClass(dv) === 'Object' && this.getObjClass(iv) === 'Object') {
+          // 嵌套对象递归补全
+          result[key] = this.completeFields(dv, iv)
+        } else {
+          // 其它类型(含数组)优先使用导入值
+          result[key] = iv
+        }
+      } else {
+        // 导入数据缺失该字段，用默认值补齐(深拷贝避免引用共享)
+        result[key] = this.deepClone(defaults[key])
+      }
+    }
+    // 保留导入数据中默认模板没有的额外字段，避免丢失自定义数据
+    for (let key in data) {
+      if (!result.hasOwnProperty(key)) {
+        result[key] = data[key]
+      }
+    }
+    return result
+  }
 }
 
 export default new utils()

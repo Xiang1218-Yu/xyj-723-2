@@ -263,6 +263,7 @@
           <el-input
             placeholder="请输入链接，输入前确保可以访问"
             v-model="item.http.externalLink"
+            @blur="checkLink(item)"
           >
           </el-input>
         </div>
@@ -320,6 +321,79 @@
         >
         </el-slider>
       </el-form-item>
+
+      <!-- F9 新增：图片圆角(0-30) -->
+      <el-form-item label="图片圆角" class="lef">
+        <el-slider
+          v-model="datas.borderRadius"
+          :max="30"
+          :min="0"
+          input-size="small"
+          show-input
+        >
+        </el-slider>
+      </el-form-item>
+
+      <!-- F9 新增：图片比例选择 -->
+      <el-form-item label="图片比例" class="lef">
+        <el-radio-group v-model="datas.aspectRatio">
+          <el-radio label="1:1">1:1</el-radio>
+          <el-radio label="4:3">4:3</el-radio>
+          <el-radio label="16:9">16:9</el-radio>
+          <el-radio label="3:4">3:4</el-radio>
+        </el-radio-group>
+      </el-form-item>
+
+      <!-- F9 新增：图片拖拽排序与单格编辑（上传/链接） -->
+      <p style="color: #d40000; font-size: 14px; margin-top: 10px">
+        图片排序
+      </p>
+      <p style="color: #969799; font-size: 12px; margin: 5px 0">
+        拖动下方图片可调整顺序
+      </p>
+      <vuedraggable
+        :list="datas.imageList"
+        item-key="index"
+        :forceFallback="true"
+        :animation="200"
+        handle=".drag-handle"
+      >
+        <template #item="{ element, index }">
+          <section class="sortItem">
+            <!-- 拖拽手柄 -->
+            <van-icon class="drag-handle" name="bars" title="拖拽排序" />
+            <!-- 图片，点击更换 -->
+            <div class="imag" @click="changeImg(index)">
+              <img
+                draggable="false"
+                v-if="!element.src"
+                src="../../../assets/images/add.png"
+                style="border: 1px solid #e5e5e5"
+                alt=""
+              />
+              <img v-else draggable="false" :src="element.src" alt="" />
+            </div>
+            <!-- 单格链接 -->
+            <div class="imgText">
+              <el-select v-model="element.linktype" placeholder="请选择跳转类型">
+                <el-option
+                  v-for="opt in optionsType"
+                  :key="opt.name"
+                  :label="opt.name"
+                  :value="opt.type"
+                >
+                </el-option>
+              </el-select>
+              <el-input
+                placeholder="请输入链接，输入前确保可以访问"
+                v-model="element.http.externalLink"
+                @blur="checkLink(element)"
+              >
+              </el-input>
+            </div>
+          </section>
+        </template>
+      </vuedraggable>
     </el-form>
 
     <!-- 上传图片 -->
@@ -328,14 +402,16 @@
 </template>
 
 <script>
+import vuedraggable from 'vuedraggable' //拖拽组件
 import uploadimg from '../../uploadImg' //图片上传
+import { ElMessage } from 'element-plus' // 消息提示
 
 export default {
   name: 'magiccubestyle',
   props: {
     datas: Object,
   },
-  components: { uploadimg },
+  components: { vuedraggable, uploadimg },
   data() {
     return {
       rubiksCubeTypes: [
@@ -408,6 +484,25 @@ export default {
     /* 替换 */
     uploadInformation(res) {
       this.datas.imageList[this.imgActive].src = res
+    },
+    // F9 新增：点击排序列表中的图片时，定位到该格并弹出上传框
+    changeImg(index) {
+      this.imgActive = index
+      this.$refs.upload.showUpload()
+    },
+    // F9 新增：单格外部链接的 URL 格式与长度校验(<=500)
+    checkLink(item) {
+      const url = item.http && item.http.externalLink
+      if (!url) return
+      if (url.length > 500) {
+        ElMessage.warning('链接长度不能超过 500 个字符')
+        item.http.externalLink = url.slice(0, 500)
+        return
+      }
+      // 外部链接(11)才做 http/https 格式校验
+      if (item.linktype === '11' && !/^https?:\/\/.+/i.test(url)) {
+        ElMessage.warning('请输入以 http:// 或 https:// 开头的合法链接')
+      }
     },
   },
 }
@@ -514,6 +609,48 @@ export default {
   .lef {
     :deep(.el-form-item__label) {
       text-align: left;
+    }
+  }
+
+  /* F9 新增：图片排序列表项样式 */
+  .sortItem {
+    padding: 6px 12px;
+    margin: 12px 0;
+    border-radius: 2px;
+    background-color: #fff;
+    box-shadow: 0 0 4px 0 rgba(10, 42, 97, 0.2);
+    display: flex;
+    align-items: center;
+    position: relative;
+    /* 拖拽手柄 */
+    .drag-handle {
+      cursor: move;
+      color: #969799;
+      font-size: 16px;
+      margin-right: 8px;
+    }
+    /* 图片 */
+    .imag {
+      width: 60px;
+      height: 60px;
+      border-radius: 5px;
+      overflow: hidden;
+      cursor: pointer;
+      flex-shrink: 0;
+      img {
+        width: 100%;
+        height: 60px;
+        display: inline-block;
+      }
+    }
+    /* 链接编辑 */
+    .imgText {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      padding-left: 20px;
+      justify-content: space-between;
     }
   }
 

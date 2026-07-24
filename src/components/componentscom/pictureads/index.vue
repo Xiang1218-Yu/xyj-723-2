@@ -66,6 +66,12 @@
 
       <!-- 分页器 -->
       <div class="swiper-pagination" style="color: #007aff"></div>
+
+      <!-- 左右箭头（showArrow 开启时显示） -->
+      <template v-if="datas.showArrow">
+        <div class="swiper-button-prev"></div>
+        <div class="swiper-button-next"></div>
+      </template>
     </div>
 
     <!-- 删除组件 -->
@@ -123,11 +129,42 @@ export default {
         return this.datas.imageMargin
       }
     },
+    /* 是否自动播放（变更时重建轮播） */
+    autoplay() {
+      this.addSwiper()
+      return this.datas.autoplay
+    },
+    /* 自动播放间隔（变更时重建轮播） */
+    autoplayDelay() {
+      this.addSwiper()
+      return this.datas.autoplayDelay
+    },
+    /* 过渡效果（变更时重建轮播） */
+    effect() {
+      this.addSwiper()
+      return this.datas.effect
+    },
+    /* 是否显示左右箭头（变更时重建轮播） */
+    showArrow() {
+      this.addSwiper()
+      return this.datas.showArrow
+    },
+    /* 是否循环播放（变更时重建轮播） */
+    loop() {
+      this.addSwiper()
+      return this.datas.loop
+    },
   },
   watch: {
     pagingType() {},
     rowindividual() {},
     imageMargin() {},
+    // 监听新增字段，变更时触发轮播重建
+    autoplay() {},
+    autoplayDelay() {},
+    effect() {},
+    showArrow() {},
+    loop() {},
   },
   methods: {
     /* 创建轮播对象 */
@@ -144,12 +181,24 @@ export default {
           }
 
           let params = {
-            loop: true,
-            autoplay: true,
+            loop: this.datas.loop, // 是否循环播放
+            // 自动播放：开启时使用配置的间隔时长，关闭时为 false
+            autoplay: this.datas.autoplay
+              ? { delay: this.datas.autoplayDelay }
+              : false,
+            effect: this.datas.effect, // 过渡效果 slide/fade/cube/coverflow/flip
             pagination: {
               el: '.swiper-pagination',
               type: this.pagingType,
             },
+          }
+
+          // 显示左右箭头时追加 navigation 配置
+          if (this.datas.showArrow) {
+            params.navigation = {
+              nextEl: '.swiper-button-next',
+              prevEl: '.swiper-button-prev',
+            }
           }
 
           if (this.datas.swiperType === 1 || this.datas.swiperType === 2) {

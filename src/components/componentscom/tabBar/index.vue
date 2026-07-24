@@ -1,23 +1,41 @@
 <template>
   <div class="tabBar">
+    <!-- F5 改造：按 iconList 渲染底部导航，支持图标/选中态图标/徽标 -->
     <div v-if="datas.iconList.length !== 0" class="tabbar">
       <van-tabbar
-        v-model="active"
+        v-model="datas.Highlight"
         :fixed="false"
         :placeholder="true"
         :border="datas.isShowBorder"
         :active-color="datas.activeColor"
         :inactive-color="datas.inactiveColor"
       >
-        <van-tabbar-item 
+        <van-tabbar-item
           v-for="(item, index) in datas.iconList"
           :key="index"
-          :name="item.iconName"
-          :dot="item.isDot"
+          :name="index"
+          :badge="item.badge ? item.badge : ''"
         >
-          <span>{{ item.iconText }}</span>
+          <span :style="{ 'font-size': datas.fontSize + 'px' }">{{
+            item.text
+          }}</span>
+          <!-- F5 新增：图标渲染，高亮项优先用 activeIcon，支持图片或 vant/iconfont 图标名 -->
           <template #icon="props">
-            <img :src="props.active ? item.iconPic : item.inactive" />
+            <!-- 图片类型图标 -->
+            <img
+              v-if="isImg(currentIcon(item, props.active))"
+              :src="currentIcon(item, props.active)"
+              :style="{
+                width: datas.iconWidth + 'px',
+                height: datas.iconHeight + 'px',
+              }"
+            />
+            <!-- vant/iconfont 图标名 -->
+            <van-icon
+              v-else-if="currentIcon(item, props.active)"
+              :name="currentIcon(item, props.active)"
+              :size="datas.iconWidth + 'px'"
+            />
           </template>
         </van-tabbar-item>
       </van-tabbar>
@@ -65,7 +83,23 @@ export default {
 
   mounted() {},
 
-  methods: {},
+  methods: {
+    // F5 新增：判断图标是否为图片链接（用于区分 img 与 van-icon 渲染）
+    isImg(str) {
+      if (!str) return false
+      return (
+        /^https?:\/\//.test(str) ||
+        /^data:image/.test(str) ||
+        /^\/\//.test(str) ||
+        /\.(png|jpe?g|gif|webp|svg)$/i.test(str)
+      )
+    },
+    // F5 新增：根据当前是否高亮返回对应图标（高亮且有 activeIcon 时用 activeIcon）
+    currentIcon(item, isActive) {
+      if (isActive && item.activeIcon) return item.activeIcon
+      return item.icon
+    }
+  },
 
   computed: {},
 
@@ -90,12 +124,8 @@ export default {
 
 .tabbar {
   :deep(.van-icon) {
-    width: 25px;
-    height: 25px;
     img {
       display: block;
-      width: 100%;
-      height: 100%;
     }
   }
 }

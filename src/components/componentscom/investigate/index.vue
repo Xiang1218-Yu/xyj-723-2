@@ -78,8 +78,84 @@
         </template>
       </van-field>
     </div>
+
+    <!-- F8 新增：按 fields 渲染表单预览 -->
+    <div class="fields" v-if="datas.fields && datas.fields.length">
+      <div
+        class="field-item"
+        v-for="(field, fIndex) in datas.fields"
+        :key="'field-' + fIndex"
+      >
+        <!-- 字段标题，必填项前显示红色 * -->
+        <div class="field-label">
+          <span class="required-star" v-if="field.required">*</span>
+          {{ field.label }}
+        </div>
+
+        <!-- 单行文本 -->
+        <van-field
+          v-if="field.type === 'input'"
+          v-model="field.value"
+          :placeholder="field.placeholder"
+        />
+
+        <!-- 多行文本 -->
+        <van-field
+          v-else-if="field.type === 'textarea'"
+          v-model="field.value"
+          type="textarea"
+          rows="2"
+          autosize
+          :placeholder="field.placeholder"
+        />
+
+        <!-- 日期（只读展示） -->
+        <van-field
+          v-else-if="field.type === 'date'"
+          v-model="field.value"
+          readonly
+          :placeholder="field.placeholder || '请选择日期'"
+          right-icon="calendar-o"
+        />
+
+        <!-- 开关 -->
+        <div class="field-switch" v-else-if="field.type === 'switch'">
+          <van-switch v-model="field.value" size="20px" />
+        </div>
+
+        <!-- 评分 -->
+        <div class="field-rate" v-else-if="field.type === 'rate'">
+          <van-rate v-model="field.value" />
+        </div>
+
+        <!-- 单选 -->
+        <van-radio-group
+          v-else-if="field.type === 'radio'"
+          v-model="field.value"
+          direction="horizontal"
+        >
+          <van-radio
+            :name="opt"
+            v-for="(opt, oIndex) in field.options"
+            :key="oIndex"
+            >{{ opt }}</van-radio
+          >
+        </van-radio-group>
+      </div>
+    </div>
+
     <div class="button">
-      <button>提交</button>
+      <!-- F8 新增：提交按钮应用背景/文字色/圆角，点击执行必填校验 -->
+      <button
+        :style="{
+          background: datas.submitBgColor,
+          color: datas.submitTextColor,
+          'border-radius': datas.submitRadius + 'px',
+        }"
+        @click="submitForm"
+      >
+        {{ datas.submitText || '提交' }}
+      </button>
     </div>
     <!-- 删除组件 -->
     <slot name="deles" />
@@ -87,6 +163,8 @@
 </template>
 
 <script>
+import { ElMessage } from 'element-plus' // 消息提示
+
 export default {
   name: 'investigate',
   data() {
@@ -127,6 +205,29 @@ export default {
       })
     },
     //
+    // F8 新增：提交时校验所有必填字段是否有值，缺失则提示第一个未填项
+    submitForm() {
+      const fields = this.datas.fields || []
+      for (let i = 0; i < fields.length; i++) {
+        const field = fields[i]
+        if (!field.required) continue
+        const val = field.value
+        // 判断是否为空：开关未开(false)、评分为 0、文本为空、单选未选均视为未填
+        let empty = false
+        if (field.type === 'switch') {
+          empty = val !== true
+        } else if (field.type === 'rate') {
+          empty = !val || Number(val) <= 0
+        } else {
+          empty = val === '' || val === null || val === undefined
+        }
+        if (empty) {
+          ElMessage.warning('请填写：' + (field.label || '必填项'))
+          return
+        }
+      }
+      ElMessage.success('提交成功')
+    },
   },
   watch: {},
 }
@@ -223,6 +324,36 @@ select {
     text-align: center;
     font-size: 14px;
     border: none;
+    cursor: pointer;
+  }
+}
+
+/* F8 新增：fields 表单预览样式 */
+.fields {
+  .field-item {
+    padding: 8px 16px;
+    background: #fff;
+    border-bottom: 1px solid #f2f2f2;
+    .field-label {
+      font-size: 13px;
+      color: #323233;
+      margin-bottom: 6px;
+      /* 必填红色星号 */
+      .required-star {
+        color: #ff0000;
+        margin-right: 2px;
+      }
+    }
+    .field-switch,
+    .field-rate {
+      padding: 2px 0;
+    }
+    :deep(.van-field) {
+      padding: 6px 0;
+    }
+    :deep(.van-field__label) {
+      display: none;
+    }
   }
 }
 .select {

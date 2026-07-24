@@ -26,6 +26,7 @@
 
 <script>
 import { uploadCOS } from '@/utils/upload'
+import { ElMessage } from 'element-plus'
 
 import Editor from '@tinymce/tinymce-vue'
 import 'tinymce/themes/silver'
@@ -90,11 +91,15 @@ export default {
           'save',
         ],
         image_advtab: true,
+        // 字号可选项（TinyMCE5 通过 fontsize_formats 配合 fontsizeselect 使用）
+        fontsize_formats: '12px 14px 16px 18px 24px 36px 48px',
+        // 行高可选项（TinyMCE5.5+ 通过 lineheight_formats 配合 lineheight 按钮使用）
+        lineheight_formats: '1 1.2 1.4 1.6 1.8 2.0',
         toolbar: [
           `fullscreen code bold italic underline strikethrough alignleft aligncenter alignright alignjustify 
           outdent indent image link removeformat cut copy paste ltr rtl anchor restoredraft pagebreak save 
           table tabledelete tableprops tablerowprops tablecellprops tableinsertrowbefore tableinsertrowafter tabledeleterow tableinsertcolbefore tableinsertcolafter tabledeletecol 
-          backcolor formatselect fontselect fontsizeselect forecolor 
+          backcolor formatselect fontselect fontsizeselect forecolor lineheight 
           subscript superscript hr preview print searchreplace wordcount toc charmap bullist numlist insertdatetime undo redo`,
         ],
         theme: 'silver', //主题
@@ -146,7 +151,18 @@ export default {
         'hsla(209, 100%, 56%, 0.73)',
         '#c7158577',
       ],
+      // 富文本内容最大长度限制，超出则提示并截断，避免数据异常
+      maxLength: 20000,
     }
+  },
+  watch: {
+    // 监听富文本内容变化，超长时用 ElMessage 提示并截断
+    'datas.myValue'(val) {
+      if (val && val.length > this.maxLength) {
+        ElMessage.warning(`富文本内容长度不能超过 ${this.maxLength} 个字符，已自动截断`)
+        this.datas.myValue = val.slice(0, this.maxLength)
+      }
+    },
   },
 }
 </script>

@@ -18,6 +18,9 @@
         <el-button @click="catJson">查看JSON </el-button>
         <el-button @click="$refs.file.click()">导入JSON </el-button>
         <el-button @click="exportJSON">导出JSON </el-button>
+        <!-- F16 新增：导出静态 HTML / 导出 PNG 长图 -->
+        <el-button @click="exportHTML">导出HTML </el-button>
+        <el-button @click="exportImage" :loading="exporting">导出长图 </el-button>
         <input
           type="file"
           ref="file"
@@ -45,10 +48,7 @@
           <!-- 主体内容 -->
           <section
             class="phone-container"
-            :style="{
-              'background-color': pageSetup.bgColor,
-              backgroundImage: 'url(' + pageSetup.bgImg + ')',
-            }"
+            :style="containerStyle"
             @drop="drop($event)"
             @dragover="allowDrop($event)"
             @dragleave="dragleaves($event)"
@@ -153,27 +153,74 @@
 import utils from 'utils/index' // 方法类
 import componentProperties from '@/utils/componentProperties' // 组件数据
 import FileSaver from 'file-saver' // 导出JSON
-import { reactive, watch, toRefs, inject } from 'vue'
+import html2canvas from 'html2canvas/dist/html2canvas.min.js' // F16：导出 PNG 长图(使用自包含浏览器构建，避免 alpha 版缺失 css-line-break 依赖)
+import { reactive, watch, toRefs, inject, computed, ref } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import vuedraggable from 'vuedraggable' //拖拽组件
 
 // 是否显示预览
 const realTimeViewData = reactive({ show: false })
 
+// F16：长图导出中状态(防止重复点击)
+const exporting = ref(false)
+
+// F16：页面设置默认模板(工厂函数)，用于初始化与导入时的字段补全基准
+const createDefaultPageSetup = () => ({
+  // 页面设置属性
+  name: '页面标题', //页面名称
+  details: '', //页面描述
+  isPerson: false, // 是否显示个人中心
+  isBack: true, // 是否返回按钮
+  titleHeight: 35, // 高度
+  bgColor: 'rgba(249, 249, 249, 10)', //背景颜色
+  bgImg: '', // 背景图片
+  // F15 新增：页面背景与标题栏增强
+  bgType: 'color', // 背景类型: color(纯色)/gradient(渐变)/image(图片)
+  gradientStart: 'rgb(255, 255, 255)', // 渐变起始色
+  gradientEnd: 'rgb(230, 240, 255)', // 渐变结束色
+  gradientAngle: 180, // 渐变角度(0-360)
+  bgRepeat: 'cover', // 背景图铺贴方式: cover(覆盖)/repeat(平铺)
+  titleColor: '#333333', // 标题栏文字颜色
+  pageMargin: 0, // 页面外边距(px, 0-30)
+})
+// 导入时用作字段补全基准的默认页面设置
+const defaultPageSetup = createDefaultPageSetup()
+
 // 页面数据
 const datas = reactive({
   id: null, //当前页面id
-  pageSetup: {
-    // 页面设置属性
-    name: '页面标题', //页面名称
-    details: '', //页面描述
-    isPerson: false, // 是否显示个人中心
-    isBack: true, // 是否返回按钮
-    titleHeight: 35, // 高度
-    bgColor: 'rgba(249, 249, 249, 10)', //背景颜色
-    bgImg: '', // 背景图片
-  },
+  pageSetup: createDefaultPageSetup(),
   pageComponents: [], //页面组件
+})
+
+/**
+ * F15 新增：根据页面背景配置计算主体容器样式
+ * 支持纯色 / 渐变 / 图片(覆盖或平铺)，并应用页面外边距
+ */
+const containerStyle = computed(() => {
+  const p = datas.pageSetup
+  const style = {
+    padding: (p.pageMargin || 0) + 'px', //页面外边距
+  }
+  if (p.bgType === 'gradient') {
+    // 渐变背景
+    style.backgroundImage = `linear-gradient(${p.gradientAngle}deg, ${p.gradientStart}, ${p.gradientEnd})`
+  } else if (p.bgType === 'image' && p.bgImg) {
+    // 图片背景，支持覆盖(cover)与平铺(repeat)
+    style.backgroundImage = `url(${p.bgImg})`
+    if (p.bgRepeat === 'repeat') {
+      style.backgroundRepeat = 'repeat'
+      style.backgroundSize = 'auto'
+    } else {
+      style.backgroundRepeat = 'no-repeat'
+      style.backgroundSize = 'cover'
+    }
+    style.backgroundColor = p.bgColor //图片下方兜底色
+  } else {
+    // 纯色背景(默认)
+    style.backgroundColor = p.bgColor
+  }
+  return style
 })
 
 // 查看JSON
@@ -206,11 +253,35 @@ const exportJSON = () => {
   const data = JSON.stringify({
     id: datas.id,
     name: datas.pageSetup.name,
+    // F16：导出时写入数据版本，便于导入时做版本迁移
+    version: componentProperties.get('componentPropertiesVersion'),
     templateJson: JSON.stringify(datas.pageSetup),
     component: JSON.stringify(datas.pageComponents),
   })
   const blob = new Blob([data], { type: '' })
   FileSaver.saveAs(blob, `${datas.pageSetup.name}.json`)
+}
+
+/**
+ * F16：对导入的组件列表做字段补全/版本迁移
+ * 以 componentProperties 中的默认模板为基准，补齐新增字段，兼容旧版本 JSON
+ *
+ * @param {Array} list 导入的组件数组
+ * @returns {Array} 补全后的组件数组
+ */
+const migrateComponents = (list) => {
+  if (!utils.isArray(list)) return []
+  return list.map((item) => {
+    // 占位提示组件无需迁移
+    if (!item || !item.component || item.component === 'placementarea') {
+      return item
+    }
+    const template = componentProperties.get(item.component)
+    // 找不到对应模板(未知组件)则原样返回
+    if (!template) return item
+    // 用默认模板补全整个组件对象(含 setStyle 内新增字段)
+    return utils.completeFields(utils.deepClone(template), item)
+  })
 }
 
 // 导入json
@@ -220,14 +291,121 @@ const importJSON = () => {
   reader.readAsText(file)
   let _this = datas
   reader.onload = function () {
-    // this.result为读取到的json字符串，需转成json对象
-    let ImportJSON = JSON.parse(this.result)
-    // 检测是否导入成功
-    console.log(ImportJSON, '-----------------导入成功')
-    // 导入JSON数据
-    _this.id = ImportJSON.id
-    _this.pageSetup = JSON.parse(ImportJSON.templateJson)
-    _this.pageComponents = JSON.parse(ImportJSON.component)
+    try {
+      // this.result为读取到的json字符串，需转成json对象
+      let ImportJSON = JSON.parse(this.result)
+
+      // F16：基础格式校验，缺少关键字段则提示并终止
+      if (!ImportJSON || !ImportJSON.templateJson || !ImportJSON.component) {
+        ElMessage.error('导入失败：JSON 格式不正确或缺少必要字段')
+        return
+      }
+
+      // 解析页面设置与组件列表
+      const importedSetup = JSON.parse(ImportJSON.templateJson)
+      const importedComponents = JSON.parse(ImportJSON.component)
+
+      // F16：页面设置字段补全(以当前默认 pageSetup 为基准，补齐新增的背景/标题栏等字段)
+      _this.id = ImportJSON.id
+      _this.pageSetup = utils.completeFields(
+        utils.deepClone(defaultPageSetup),
+        importedSetup
+      )
+      // F16：组件列表版本迁移补全
+      _this.pageComponents = migrateComponents(importedComponents)
+
+      // 提示版本迁移结果
+      const curVersion = componentProperties.get('componentPropertiesVersion')
+      if (ImportJSON.version && ImportJSON.version !== curVersion) {
+        ElMessage.success(
+          `已从 ${ImportJSON.version} 迁移至 ${curVersion}，并自动补全新增字段`
+        )
+      } else {
+        ElMessage.success('导入成功')
+      }
+    } catch (e) {
+      console.error('导入解析失败', e)
+      ElMessage.error('导入失败：文件内容无法解析')
+    } finally {
+      // 清空 input 值，保证同一文件可再次触发 change
+      const fileEl = document.getElementById('file')
+      if (fileEl) fileEl.value = ''
+    }
+  }
+}
+
+/**
+ * F16：导出静态 HTML —— 将当前预览手机区域的真实 DOM 与样式内联导出为独立 HTML 文件，
+ * 便于脱离编辑器直接在浏览器中查看渲染效果
+ */
+const exportHTML = () => {
+  const el = document.getElementById('imageTofile')
+  if (!el) {
+    ElMessage.error('未找到可导出的页面内容')
+    return
+  }
+  // 收集页面中所有样式(内联 style 标签 + 外链样式表链接)
+  let styles = ''
+  document.querySelectorAll('style').forEach((s) => {
+    styles += `<style>${s.innerHTML}</style>\n`
+  })
+  document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
+    styles += `<link rel="stylesheet" href="${l.href}">\n`
+  })
+
+  // 组装完整 HTML 文档，居中展示 375px 宽的手机内容
+  const html = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>${datas.pageSetup.name || '页面预览'}</title>
+${styles}
+<style>
+  body { margin: 0; display: flex; justify-content: center; background: #f7f8fa; }
+  .export-wrap { width: 375px; background: #fff; }
+</style>
+</head>
+<body>
+<div class="export-wrap">${el.innerHTML}</div>
+</body>
+</html>`
+
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+  FileSaver.saveAs(blob, `${datas.pageSetup.name || 'page'}.html`)
+  ElMessage.success('已导出静态 HTML')
+}
+
+/**
+ * F16：导出 PNG 长图 —— 用 html2canvas 对整块手机预览区域截图，导出为 PNG
+ */
+const exportImage = async () => {
+  const el = document.getElementById('imageTofile')
+  if (!el) {
+    ElMessage.error('未找到可导出的页面内容')
+    return
+  }
+  exporting.value = true
+  try {
+    const canvas = await html2canvas(el, {
+      useCORS: true, // 允许跨域图片(需图片服务支持 CORS)
+      scale: 2, // 2 倍分辨率，长图更清晰
+      backgroundColor: '#ffffff',
+    })
+    // canvas 转 blob 后下载
+    canvas.toBlob((blob) => {
+      if (blob) {
+        FileSaver.saveAs(blob, `${datas.pageSetup.name || 'page'}.png`)
+        ElMessage.success('已导出长图')
+      } else {
+        ElMessage.error('长图生成失败')
+      }
+      exporting.value = false
+    })
+  } catch (e) {
+    console.error('导出长图失败', e)
+    ElMessage.error('导出长图失败，可能存在跨域图片')
+    exporting.value = false
   }
 }
 
