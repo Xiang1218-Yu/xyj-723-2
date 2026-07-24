@@ -80,8 +80,9 @@
     </section>
 
     <!-- 没有视频展示默认 -->
+    <!-- F14：与文章预览互斥——存在文章数据时不显示占位商品卡片，避免内容重叠 -->
     <section
-      v-show="!datas.imageList[0]"
+      v-show="!datas.imageList[0] && !hasArticle"
       :class="[datas.commodityType === 2 ? 'defaultcommodityList2' : '']"
       class="defaultcommodity"
     >
@@ -225,6 +226,13 @@ export default {
     return {
       active: 0,
     }
+  },
+
+  computed: {
+    // F14：是否存在文章数据，用于与占位商品卡片互斥显示
+    hasArticle() {
+      return !!(this.datas.articleList && this.datas.articleList.length)
+    },
   },
 
   created() {},

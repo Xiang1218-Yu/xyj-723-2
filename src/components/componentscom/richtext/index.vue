@@ -1,5 +1,6 @@
 <template>
-  <div class="richtext" :style="{ background: datas.backColor }">
+  <!-- F1：预览区应用整体文字大小/行高，与编辑器正文保持一致 -->
+  <div class="richtext" :style="richtextStyle">
     <img
       draggable="false"
       src="../../../assets/images/fwb.png"
@@ -18,6 +19,16 @@ export default {
   name: 'richtext',
   props: {
     datas: Object,
+  },
+  computed: {
+    // F1：背景色 + 整体文字大小/行高（旧数据缺字段时回退默认值）
+    richtextStyle() {
+      return {
+        background: this.datas.backColor,
+        fontSize: (this.datas.fontSize || 14) + 'px',
+        lineHeight: this.datas.lineHeight || 1.6,
+      }
+    },
   },
 }
 </script>

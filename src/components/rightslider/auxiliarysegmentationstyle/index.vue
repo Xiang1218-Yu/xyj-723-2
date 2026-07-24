@@ -45,29 +45,9 @@
       <div style="height: 20px" />
 
       <!-- 选择样式 -->
-      <el-form-item
-        v-show="datas.segmentationtype === 1"
-        class="lef"
-        label="选择样式"
-      >
-        <div class="weiz">
-          <el-tooltip
-            effect="dark"
-            :content="item.text"
-            placement="bottom"
-            v-for="(item, index) in borderType"
-            :key="index"
-          >
-            <i
-              class="iconfont"
-              :class="[item.icon, datas.bordertp === item.type ? 'active' : '']"
-              @click="datas.bordertp = item.type"
-            />
-          </el-tooltip>
-        </div>
-      </el-form-item>
-
-      <div v-show="datas.segmentationtype === 1" style="height: 20px" />
+      <!-- F12修复：旧的线型选择器(bordertp: solid/dashed/dotted)与新的 lineStyle 系统重复，
+           渲染组件仅使用 lineStyle，故移除此旧选择器，统一由下方“线型样式”控制，避免配置不同步。
+           bordertp 字段保留但由 lineStyle 自动同步(见 watch)，以兼容可能读取旧字段的历史数据。 -->
 
       <!-- 左右边距 -->
       <el-form-item
@@ -277,25 +257,18 @@ export default {
         'hsla(209, 100%, 56%, 0.73)',
         '#c7158577',
       ],
-      borderType: [
-        //线类型
-        {
-          icon: 'icon-icon_fengexian_shixian',
-          text: '实线',
-          type: 'solid',
-        },
-        {
-          icon: 'icon-xuxian',
-          text: '虚线',
-          type: 'dashed',
-        },
-        {
-          icon: 'icon-dianxian--',
-          text: '点线',
-          type: 'dotted',
-        },
-      ],
     }
+  },
+  // F12修复：lineStyle 为权威线型字段；同步写回旧字段 bordertp，
+  // 使读取旧字段的历史逻辑/数据保持一致(gradient/double 无对应旧值时回退 solid)
+  watch: {
+    'datas.lineStyle': {
+      immediate: true,
+      handler(val) {
+        // 旧字段仅支持 solid/dashed/dotted，新线型 double/gradient 统一映射为 solid
+        this.datas.bordertp = val === 'dashed' ? 'dashed' : 'solid'
+      },
+    },
   },
   methods: {
     // F12：左右缩进范围校验(0-50)，越界纠正并提示

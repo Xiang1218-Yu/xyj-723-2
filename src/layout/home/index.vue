@@ -335,23 +335,113 @@ const importJSON = () => {
 }
 
 /**
- * F16：导出静态 HTML —— 将当前预览手机区域的真实 DOM 与样式内联导出为独立 HTML 文件，
- * 便于脱离编辑器直接在浏览器中查看渲染效果
+ * F16：判断一条 CSS 选择器是否作用于导出子树 root。
+ * 去掉伪类/伪元素/状态(:hover/::before 等静态 DOM 中不存在的部分)后，
+ * 用 root.matches / root.querySelector 检测是否命中，命中才保留该规则，
+ * 以此裁剪掉编辑器 UI / Element Plus 面板等与导出内容无关的样式。
+ *
+ * @param {Element} root 导出内容根节点
+ * @param {String} selectorText 规则选择器(可能逗号分隔多个)
+ * @returns {Boolean} 是否有任一子选择器命中
  */
-const exportHTML = () => {
+const selectorApplies = (root, selectorText) => {
+  return selectorText.split(',').some((sel) => {
+    // 移除伪类/伪元素(含带括号的如 :not()/:nth-child())
+    const clean = sel.replace(/::?[a-zA-Z-]+(\([^)]*\))?/g, '').trim()
+    // 纯伪元素规则(如 ::selection)清空后为空，保守保留
+    if (!clean) return true
+    try {
+      return root.matches(clean) || !!root.querySelector(clean)
+    } catch (e) {
+      // 清理后仍非法的选择器，保守保留，避免样式缺失
+      return true
+    }
+  })
+}
+
+/**
+ * F16：递归过滤 CSS 规则，仅保留作用于 root 的样式规则；
+ * @font-face/@keyframes 无条件保留；@media/@supports 递归处理。
+ *
+ * @param {CSSRuleList} rules 规则列表
+ * @param {Element} root 导出内容根节点
+ * @returns {String} 过滤后的 CSS 文本
+ */
+const filterCssRules = (rules, root) => {
+  let out = ''
+  for (const rule of Array.from(rules)) {
+    if (rule.type === CSSRule.STYLE_RULE) {
+      // 普通样式规则：命中导出子树才保留
+      if (selectorApplies(root, rule.selectorText)) out += rule.cssText + '\n'
+    } else if (rule.type === CSSRule.MEDIA_RULE) {
+      // 媒体查询：递归过滤，内部有保留项才输出包裹
+      const inner = filterCssRules(rule.cssRules, root)
+      if (inner) out += `@media ${rule.media.mediaText}{${inner}}\n`
+    } else if (rule.type === CSSRule.SUPPORTS_RULE) {
+      const inner = filterCssRules(rule.cssRules, root)
+      if (inner) out += `@supports ${rule.conditionText}{${inner}}\n`
+    } else if (
+      rule.type === CSSRule.FONT_FACE_RULE ||
+      rule.type === CSSRule.KEYFRAMES_RULE
+    ) {
+      // 字体与动画帧无法用选择器判断，直接保留(体积小且可能被用到)
+      out += rule.cssText + '\n'
+    }
+    // @import 等其它规则忽略
+  }
+  return out
+}
+
+/**
+ * F16：导出静态 HTML —— 将当前预览手机区域的真实 DOM 与样式内联导出为独立 HTML 文件，
+ * 便于脱离编辑器直接在浏览器中查看渲染效果。
+ * F16修复：
+ *  1. 真正裁剪样式：遍历 document.styleSheets，仅保留作用于导出子树的规则，
+ *     剔除编辑器 UI / Element Plus 面板等无关样式，显著减小体积、避免冲突；
+ *  2. 跨域(无法读取 cssRules)的外链样式表 fetch 内容并整体内联，保证离线可打开。
+ */
+const exportHTML = async () => {
   const el = document.getElementById('imageTofile')
   if (!el) {
     ElMessage.error('未找到可导出的页面内容')
     return
   }
-  // 收集页面中所有样式(内联 style 标签 + 外链样式表链接)
+
   let styles = ''
-  document.querySelectorAll('style').forEach((s) => {
-    styles += `<style>${s.innerHTML}</style>\n`
+  // 记录可通过 cssRules 读取(同源)的样式表，避免后续对其重复 fetch
+  const readableSheets = new Set()
+  Array.from(document.styleSheets).forEach((sheet) => {
+    let rules = null
+    try {
+      rules = sheet.cssRules
+    } catch (e) {
+      // 跨域样式表无法读取 cssRules，留待下方按 <link> fetch 兜底
+      return
+    }
+    if (!rules) return
+    readableSheets.add(sheet)
+    // 逐规则裁剪，仅保留作用于导出内容的样式
+    const css = filterCssRules(rules, el)
+    if (css) styles += `<style>${css}</style>\n`
   })
-  document.querySelectorAll('link[rel="stylesheet"]').forEach((l) => {
-    styles += `<link rel="stylesheet" href="${l.href}">\n`
-  })
+
+  // F16修复：跨域/不可读取的外链样式表，fetch 内容整体内联，保证离线打开可用
+  const links = Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
+  await Promise.all(
+    links.map(async (l) => {
+      // 同源且已被上面按规则裁剪过的样式表，跳过避免重复
+      if (l.sheet && readableSheets.has(l.sheet)) return
+      try {
+        const res = await fetch(l.href)
+        const css = await res.text()
+        styles += `<style>${css}</style>\n`
+      } catch (e) {
+        // 拉取失败时回退为绝对链接，至少在线可加载
+        console.warn('样式表内联失败，回退为外链', l.href, e)
+        styles += `<link rel="stylesheet" href="${l.href}">\n`
+      }
+    })
+  )
 
   // 组装完整 HTML 文档，居中展示 375px 宽的手机内容
   const html = `<!DOCTYPE html>

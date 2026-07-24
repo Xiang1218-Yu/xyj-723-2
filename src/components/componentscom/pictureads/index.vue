@@ -32,7 +32,9 @@
     </div>
 
     <!-- 轮播组件 -->
+    <!-- F3修复：使用唯一 ref + 作用域内选择器，避免多个轮播组件共用全局 '.swiper-container' 选错节点 -->
     <div
+      ref="swiperEl"
       class="swiper-container pointer-events"
       v-if="
         (imageList[0] && swiperType === 1) ||
@@ -90,139 +92,120 @@ export default {
   },
   data() {
     return {
+      // 当前 Swiper 实例（单实例，作用于本组件容器）
       mySwiper: null,
     }
   },
   computed: {
-    /* 类型切换 */
+    /* 轮播类型(模板使用) */
     swiperType() {
-      console.log(this.datas.swiperType, '----------------轮播类型')
-      this.addSwiper()
       return this.datas.swiperType
     },
-    /* 图片删除或者增加 */
+    /* 图片列表(模板使用) */
     imageList() {
-      this.addSwiper()
-      console.log(this.datas.imageList.length, '-------轮播数量')
       return this.datas.imageList
     },
-    /* 分页器类型切换 */
+    /* 分页器类型 */
     pagingType() {
-      this.addSwiper()
       return this.datas.pagingType
     },
-    /* 一行个数 */
+    /* 一行个数：轮播海报(类型1)固定为 1 */
     rowindividual() {
-      this.addSwiper()
-      if (this.datas.swiperType === 1) {
-        return 1
-      } else {
-        return this.datas.rowindividual
-      }
+      return this.datas.swiperType === 1 ? 1 : this.datas.rowindividual
     },
-    /* 图片间距 */
+    /* 图片间距：轮播海报(类型1)固定为 0 */
     imageMargin() {
-      this.addSwiper()
-      if (this.datas.swiperType === 1) {
-        return 0
-      } else {
-        return this.datas.imageMargin
-      }
+      return this.datas.swiperType === 1 ? 0 : this.datas.imageMargin
     },
-    /* 是否自动播放（变更时重建轮播） */
-    autoplay() {
-      this.addSwiper()
-      return this.datas.autoplay
-    },
-    /* 自动播放间隔（变更时重建轮播） */
-    autoplayDelay() {
-      this.addSwiper()
-      return this.datas.autoplayDelay
-    },
-    /* 过渡效果（变更时重建轮播） */
-    effect() {
-      this.addSwiper()
-      return this.datas.effect
-    },
-    /* 是否显示左右箭头（变更时重建轮播） */
-    showArrow() {
-      this.addSwiper()
-      return this.datas.showArrow
-    },
-    /* 是否循环播放（变更时重建轮播） */
-    loop() {
-      this.addSwiper()
-      return this.datas.loop
+    /**
+     * F3优化：聚合所有影响 Swiper 的配置为单一签名，
+     * 供 watch 统一监听，参数变更时只重建一次，避免多个 computed 副作用重复初始化
+     */
+    swiperSignature() {
+      const d = this.datas
+      return [
+        d.swiperType,
+        d.imageList ? d.imageList.length : 0,
+        d.pagingType,
+        d.rowindividual,
+        d.imageMargin,
+        d.autoplay,
+        d.autoplayDelay,
+        d.effect,
+        d.showArrow,
+        d.loop,
+      ].join('|')
     },
   },
   watch: {
-    pagingType() {},
-    rowindividual() {},
-    imageMargin() {},
-    // 监听新增字段，变更时触发轮播重建
-    autoplay() {},
-    autoplayDelay() {},
-    effect() {},
-    showArrow() {},
-    loop() {},
+    // F3优化：单一聚合监听，任一轮播参数变更后于 nextTick 重建轮播
+    swiperSignature() {
+      this.$nextTick(() => this.rebuildSwiper())
+    },
+  },
+  mounted() {
+    // 初次渲染后按需初始化轮播
+    this.$nextTick(() => this.rebuildSwiper())
+  },
+  beforeUnmount() {
+    // 组件卸载前销毁实例，避免内存泄漏与定时器残留
+    this.destroySwiper()
   },
   methods: {
-    /* 创建轮播对象 */
-    addSwiper() {
-      this.$nextTick(() => {
-        if (this.datas.swiperType !== 0 && this.datas.imageList[0]) {
-          if (this.mySwiper instanceof Array) {
-            this.mySwiper.forEach((element) => {
-              element.destroy()
-            })
-          } else if (this.mySwiper instanceof Object) {
-            // 每次重新创建swiper前都要销毁之前存在的轮播   不然轮播会重复
-            this.mySwiper.destroy()
-          }
-
-          let params = {
-            loop: this.datas.loop !== false, // 是否循环播放(默认循环)
-            // 自动播放：开启时使用配置的间隔时长(兜底 3000)，关闭时为 false
-            autoplay:
-              this.datas.autoplay !== false
-                ? { delay: Number(this.datas.autoplayDelay) || 3000 }
-                : false,
-            effect: this.datas.effect || 'slide', // 过渡效果 slide/fade/cube/coverflow/flip
-            pagination: {
-              el: '.swiper-pagination',
-              type: this.pagingType,
-            },
-          }
-
-          // 显示左右箭头时追加 navigation 配置
-          if (this.datas.showArrow) {
-            params.navigation = {
-              nextEl: '.swiper-button-next',
-              prevEl: '.swiper-button-prev',
-            }
-          }
-
-          if (this.datas.swiperType === 1 || this.datas.swiperType === 2) {
-            params.slidesPerView = this.rowindividual
-            params.spaceBetween = this.imageMargin
-          } else if (this.datas.swiperType === 3) {
-            params.slidesPerView = 1.3
-            params.centeredSlides = true
-          }
-
-          this.mySwiper = new Swiper('.swiper-container', params)
-        } else {
-          if (this.mySwiper instanceof Array) {
-            this.mySwiper.forEach((element) => {
-              element.destroy()
-            })
-          }
-          // 每次重新创建swiper前都要销毁之前存在的轮播   不然轮播会重复
-          if (this.mySwiper instanceof Object) {
-            this.mySwiper.destroy()
-          }
+    /* F3优化：销毁当前轮播实例（单实例，去除历史 instanceof Array 死代码） */
+    destroySwiper() {
+      if (this.mySwiper) {
+        this.mySwiper.destroy(true, true)
+        this.mySwiper = null
+      }
+    },
+    /* 组装 Swiper 参数（纯函数式，便于扩展与测试） */
+    buildSwiperParams() {
+      const d = this.datas
+      const params = {
+        loop: d.loop !== false, // 是否循环播放(默认循环)
+        // 自动播放：开启时使用配置的间隔时长(兜底 3000)，关闭时为 false
+        autoplay:
+          d.autoplay !== false
+            ? { delay: Number(d.autoplayDelay) || 3000 }
+            : false,
+        effect: d.effect || 'slide', // 过渡效果 slide/fade/cube/coverflow/flip
+        pagination: {
+          // 分页器限定在当前组件内部，避免多个轮播互相干扰
+          el: this.$refs.swiperEl.querySelector('.swiper-pagination'),
+          type: this.pagingType,
+        },
+      }
+      // 显示左右箭头时追加 navigation 配置(限定在当前组件内部)
+      if (d.showArrow) {
+        params.navigation = {
+          nextEl: this.$refs.swiperEl.querySelector('.swiper-button-next'),
+          prevEl: this.$refs.swiperEl.querySelector('.swiper-button-prev'),
         }
-      })
+      }
+      // 多图单行/轮播海报：按每屏个数与间距展示
+      if (d.swiperType === 1 || d.swiperType === 2) {
+        params.slidesPerView = this.rowindividual
+        params.spaceBetween = this.imageMargin
+      } else if (d.swiperType === 3) {
+        // 立体轮播：居中放大
+        params.slidesPerView = 1.3
+        params.centeredSlides = true
+      }
+      return params
+    },
+    /* F3优化：重建轮播——先销毁再按当前配置创建；不满足条件时仅销毁 */
+    rebuildSwiper() {
+      this.destroySwiper()
+      // 仅在需要轮播(非类型0)且有图片、容器已渲染时创建
+      if (
+        this.datas.swiperType !== 0 &&
+        this.datas.imageList[0] &&
+        this.$refs.swiperEl
+      ) {
+        // 传入当前组件的 DOM 元素而非全局选择器，保证多组件各自初始化到正确节点
+        this.mySwiper = new Swiper(this.$refs.swiperEl, this.buildSwiperParams())
+      }
     },
   },
 }

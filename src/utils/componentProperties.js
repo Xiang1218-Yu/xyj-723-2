@@ -150,6 +150,12 @@ componentProperties.set('richtext', {
     text: '富文本',
     myValue: '', //富文本内容
     backColor: 'rgb(249, 249, 249)', //背景颜色
+    // F1 新增：全局文字大小/行高（作用于编辑器正文与预览区，独立于 TinyMCE 局部选中样式）
+    fontSize: 14, //整体文字大小(px)
+    lineHeight: 1.6, //整体行高(倍数)
+    // F1 新增：用户自定义行高列表，每项 { name: 显示名称, value: 行高倍数 }
+    // 保存后会同时出现在面板行高下拉与编辑器行高工具栏中（联动）
+    customLineHeights: [],
   },
 })
 componentProperties.set('magiccube', {
