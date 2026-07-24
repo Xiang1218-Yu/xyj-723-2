@@ -1,23 +1,44 @@
+# 操作系统文件
 .DS_Store
-node_modules
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
+# 编辑器和IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
 
-# local env files
-.env.local
-.env.*.local
-
-# Log files
+# Node.js
+node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Editor directories and files
-.idea
-.vscode
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-*.rar
-*.zip
+# 依赖
+bower_components/
+
+# 构建输出
+dist/
+build/
+out/
+*.log
+
+# 环境变量
+.env
+.env.local
+.env.*.local
+
+# 测试覆盖率
+coverage/
+.nyc_output/
+
+# 临时文件
+*.tmp
+*.temp
+.cache/
