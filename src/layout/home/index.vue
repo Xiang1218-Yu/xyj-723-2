@@ -236,8 +236,25 @@ const importJSON = () => {
   reader.onload = function () {
     try {
       let ImportJSON = JSON.parse(this.result)
-      // #16 字段迁移：兼容旧版本数据，补全新字段
-      const defaultSetup = {
+      // #16 字段迁移：兼容旧版本数据，使用 componentProperties 中的完整默认值补全所有字段
+      const importedSetup =
+        typeof ImportJSON.templateJson === 'string'
+          ? JSON.parse(ImportJSON.templateJson)
+          : ImportJSON.templateJson || {}
+      const importedComponents =
+        typeof ImportJSON.component === 'string'
+          ? JSON.parse(ImportJSON.component)
+          : ImportJSON.component || []
+
+      // 使用页面设置完整默认值进行合并
+      const setupDefaults = {
+        name: '页面标题',
+        details: '',
+        isPerson: false,
+        isBack: true,
+        titleHeight: 35,
+        bgColor: 'rgba(249, 249, 249, 10)',
+        bgImg: '',
         gradientBg: false,
         gradientStart: '#155bd4',
         gradientEnd: '#07c160',
@@ -246,17 +263,12 @@ const importJSON = () => {
         titleColor: '#333333',
         outerMargin: 0,
       }
-      const importedSetup =
-        typeof ImportJSON.templateJson === 'string'
-          ? JSON.parse(ImportJSON.templateJson)
-          : ImportJSON.templateJson
-      const importedComponents =
-        typeof ImportJSON.component === 'string'
-          ? JSON.parse(ImportJSON.component)
-          : ImportJSON.component
-      // 合并缺失字段
-      _this.pageSetup = { ...defaultSetup, ...importedSetup }
-      // 组件数据迁移：为每个组件补全新字段
+      _this.pageSetup = utils.assiginObj(
+        JSON.parse(JSON.stringify(setupDefaults)),
+        importedSetup
+      )
+
+      // 组件数据迁移：为每个组件用 componentProperties 中的默认值补全所有新字段
       _this.pageComponents = (importedComponents || []).map((comp) => {
         const def = componentProperties.get(comp.component)
         if (def && def.setStyle) {
@@ -268,9 +280,10 @@ const importJSON = () => {
         return comp
       })
       _this.id = ImportJSON.id
-      ElMessage.success('导入成功（已自动迁移字段）')
+      ElMessage.success('导入成功（已自动迁移补全新字段）')
     } catch (e) {
-      ElMessage.error('导入失败：JSON格式错误')
+      console.error('导入失败', e)
+      ElMessage.error('导入失败：JSON格式错误或文件损坏')
     }
   }
 }
@@ -295,47 +308,97 @@ const containerStyle = computed(() => {
   return style
 })
 
-// #16 导出静态HTML
+// #16 导出静态HTML：收集所有样式表并内联，生成独立可用的HTML文件
 const exportHTML = () => {
-  const phoneEl = document.querySelector('.phoneAll') || document.getElementById('imageTofile')
-  if (!phoneEl) return
-  // 克隆节点并内联关键样式
+  const phoneEl =
+    document.getElementById('imageTofile') ||
+    document.querySelector('.phoneAll')
+  if (!phoneEl) {
+    ElMessage.warning('未找到预览区域')
+    return
+  }
+  // 克隆节点
   const clone = phoneEl.cloneNode(true)
+  // 移除所有 Vue 事件相关属性和 scoped 标记（无关紧要，浏览器忽略）
+  // 收集页面所有 CSS 规则
+  let collectedStyles = ''
+  try {
+    for (const sheet of document.styleSheets) {
+      try {
+        const rules = sheet.cssRules || sheet.rules
+        for (const rule of rules) {
+          collectedStyles += rule.cssText + '\n'
+        }
+      } catch (e) {
+        // 跨域样式表跳过
+      }
+    }
+  } catch (e) {
+    // 样式收集失败时静默
+  }
+  const title = (datas.pageSetup && datas.pageSetup.name) || '页面'
   const html = `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>${datas.pageSetup.name}</title>
+<title>${title}</title>
 <style>
-body{margin:0;padding:20px;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;}
-.phoneAll{max-width:375px;margin:0 auto;background:#fff;box-shadow:0 0 20px rgba(0,0,0,0.1);}
-img{max-width:100%;}
+*{box-sizing:border-box;}
+body{margin:0;padding:20px;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,"Microsoft YaHei",sans-serif;}
+.phoneAll{max-width:375px;margin:0 auto;background:#fff;box-shadow:0 0 20px rgba(0,0,0,0.1);position:relative;overflow:hidden;}
+.phoneAll img{max-width:100%;display:block;}
+.statusBar{width:100%;display:block;}
+${collectedStyles}
 </style>
 </head>
 <body>${clone.outerHTML}</body>
 </html>`
   const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-  FileSaver.saveAs(blob, `${datas.pageSetup.name}.html`)
+  FileSaver.saveAs(blob, `${title}.html`)
+  ElMessage.success('HTML导出成功')
 }
 
 // #16 导出PNG长图（使用html2canvas）
 const exportPNG = async () => {
   const phoneEl = document.getElementById('imageTofile')
-  if (!phoneEl) return
+  if (!phoneEl) {
+    ElMessage.warning('未找到预览区域')
+    return
+  }
+  const loading = ElMessage({
+    message: '正在生成截图...',
+    type: 'info',
+    duration: 0,
+  })
   try {
     const html2canvas = (await import('html2canvas')).default
     const canvas = await html2canvas(phoneEl, {
       useCORS: true,
+      allowTaint: true,
       scale: 2,
       backgroundColor: '#ffffff',
       logging: false,
+      width: phoneEl.scrollWidth,
+      height: phoneEl.scrollHeight,
+      windowWidth: phoneEl.scrollWidth,
+      windowHeight: phoneEl.scrollHeight,
     })
     canvas.toBlob((blob) => {
-      if (blob) FileSaver.saveAs(blob, `${datas.pageSetup.name}.png`)
+      if (blob) {
+        const title = (datas.pageSetup && datas.pageSetup.name) || 'page'
+        FileSaver.saveAs(blob, `${title}.png`)
+        loading.close()
+        ElMessage.success('PNG导出成功')
+      } else {
+        loading.close()
+        ElMessage.error('截图生成失败')
+      }
     })
   } catch (e) {
-    ElMessage.error('导出PNG失败，请刷新重试')
+    loading.close()
+    console.error('PNG导出失败', e)
+    ElMessage.error('导出PNG失败：' + (e.message || '未知错误'))
   }
 }
 

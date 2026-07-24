@@ -8,6 +8,8 @@ module.exports = {
   outputDir: 'AS-Editor',
   assetsDir: 'static',
   productionSourceMap: false,
+  // 让 babel 转译 node_modules 中使用现代语法（可选链等）的依赖
+  transpileDependencies: ['vue-router'],
   devServer: {
     open: true,
     proxy: {
