@@ -145,35 +145,35 @@ export default {
     if (this.datas.jsonData) {
       this.datas.jsonData.forEach(item => {
         if (item.type == 5 && item.value2 === undefined) {
-          this.$set(item, 'value2', false)
+          item.value2 = false
         }
         if (item.type == 6 && item.value2 === undefined) {
-          this.$set(item, 'value2', 0)
+          item.value2 = 0
         }
         if (item.type == 4) {
-          this.$set(item, 'showDate', false)
-          this.$set(item, 'currentDate', new Date())
+          item.showDate = false
+          item.currentDate = new Date()
         }
         if (item.required === undefined) {
-          this.$set(item, 'required', false)
+          item.required = false
         }
       })
     }
     // 初始化提交按钮默认值
     if (!this.datas.submitText) {
-      this.$set(this.datas, 'submitText', '提交')
+      this.datas.submitText = '提交'
     }
     if (!this.datas.submitBgColor) {
-      this.$set(this.datas, 'submitBgColor', '#3074f3')
+      this.datas.submitBgColor = '#3074f3'
     }
     if (!this.datas.submitTextColor) {
-      this.$set(this.datas, 'submitTextColor', '#fff')
+      this.datas.submitTextColor = '#fff'
     }
     if (this.datas.submitBtnRadius === undefined) {
-      this.$set(this.datas, 'submitBtnRadius', 20)
+      this.datas.submitBtnRadius = 20
     }
     if (this.datas.requiredMark === undefined) {
-      this.$set(this.datas, 'requiredMark', true)
+      this.datas.requiredMark = true
     }
   },
   mounted() {},

@@ -328,31 +328,31 @@ export default {
   created() {
     // 初始化数据
     if (!this.datas.lineWidth) {
-      this.$set(this.datas, 'lineWidth', 1)
+      this.datas.lineWidth = 1
     }
     if (!this.datas.gradientStartColor) {
-      this.$set(this.datas, 'gradientStartColor', '#ff6b6b')
+      this.datas.gradientStartColor = '#ff6b6b'
     }
     if (!this.datas.gradientEndColor) {
-      this.$set(this.datas, 'gradientEndColor', '#4ecdc4')
+      this.datas.gradientEndColor = '#4ecdc4'
     }
     if (this.datas.leftIndent === undefined) {
-      this.$set(this.datas, 'leftIndent', 0)
+      this.datas.leftIndent = 0
     }
     if (this.datas.rightIndent === undefined) {
-      this.$set(this.datas, 'rightIndent', 0)
+      this.datas.rightIndent = 0
     }
     if (this.datas.showText === undefined) {
-      this.$set(this.datas, 'showText', false)
+      this.datas.showText = false
     }
     if (!this.datas.centerText) {
-      this.$set(this.datas, 'centerText', '')
+      this.datas.centerText = ''
     }
     if (!this.datas.textColor) {
-      this.$set(this.datas, 'textColor', '#999999')
+      this.datas.textColor = '#999999'
     }
     if (!this.datas.textSize) {
-      this.$set(this.datas, 'textSize', 12)
+      this.datas.textSize = 12
     }
   },
   methods: {

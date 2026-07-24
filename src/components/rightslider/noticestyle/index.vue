@@ -157,22 +157,22 @@ export default {
   created() {
     // 初始化默认值
     if (this.datas.multiMode === undefined) {
-      this.$set(this.datas, 'multiMode', false)
+      this.datas.multiMode = false
     }
     if (!this.datas.noticeList) {
-      this.$set(this.datas, 'noticeList', [''])
+      this.datas.noticeList = ['']
     }
     if (!this.datas.scrollDirection) {
-      this.$set(this.datas, 'scrollDirection', 'left')
+      this.datas.scrollDirection = 'left'
     }
     if (!this.datas.scrollSpeed) {
-      this.$set(this.datas, 'scrollSpeed', 50)
+      this.datas.scrollSpeed = 50
     }
     if (this.datas.showLeadIcon === undefined) {
-      this.$set(this.datas, 'showLeadIcon', true)
+      this.datas.showLeadIcon = true
     }
     if (!this.datas.leadIcon) {
-      this.$set(this.datas, 'leadIcon', 'volume-o')
+      this.datas.leadIcon = 'volume-o'
     }
   },
   methods: {
@@ -183,7 +183,7 @@ export default {
     // 添加公告
     addNotice() {
       if (!this.datas.noticeList) {
-        this.$set(this.datas, 'noticeList', [])
+        this.datas.noticeList = []
       }
       this.datas.noticeList.push('')
     },

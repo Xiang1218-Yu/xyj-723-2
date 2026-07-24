@@ -347,26 +347,26 @@ export default {
   created() {
     // 初始化左侧图标默认值
     if (this.datas.showLeftIcon === undefined) {
-      this.$set(this.datas, 'showLeftIcon', false)
+      this.datas.showLeftIcon = false
     }
     if (!this.datas.leftIcon) {
-      this.$set(this.datas, 'leftIcon', '')
+      this.datas.leftIcon = ''
     }
     if (!this.datas.leftIconSize) {
-      this.$set(this.datas, 'leftIconSize', 20)
+      this.datas.leftIconSize = 20
     }
     // 初始化渐变默认值
     if (this.datas.gradientEnabled === undefined) {
-      this.$set(this.datas, 'gradientEnabled', false)
+      this.datas.gradientEnabled = false
     }
     if (!this.datas.gradientStart) {
-      this.$set(this.datas, 'gradientStart', '#ff6b6b')
+      this.datas.gradientStart = '#ff6b6b'
     }
     if (!this.datas.gradientEnd) {
-      this.$set(this.datas, 'gradientEnd', '#4ecdc4')
+      this.datas.gradientEnd = '#4ecdc4'
     }
     if (!this.datas.gradientDirection) {
-      this.$set(this.datas, 'gradientDirection', 'to right')
+      this.datas.gradientDirection = 'to right'
     }
   },
   methods: {},

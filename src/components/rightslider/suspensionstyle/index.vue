@@ -291,10 +291,10 @@ export default {
   created() {
     // 初始化数据
     if (!this.datas.fabItems) {
-      this.$set(this.datas, 'fabItems', [])
+      this.datas.fabItems = []
     }
     if (!this.datas.http) {
-      this.$set(this.datas, 'http', {})
+      this.datas.http = {}
     }
     this.datas.fabItems.forEach((item) => {
       if (!item.http) item.http = {}

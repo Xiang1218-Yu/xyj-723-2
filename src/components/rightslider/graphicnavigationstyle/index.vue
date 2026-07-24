@@ -379,31 +379,31 @@ export default {
   created() {
     // 初始化数据
     if (!this.datas.imageList) {
-      this.$set(this.datas, 'imageList', [])
+      this.datas.imageList = []
     }
     if (this.datas.cardStyle === undefined) {
-      this.$set(this.datas, 'cardStyle', 0)
+      this.datas.cardStyle = 0
     }
     if (!this.datas.iconShape) {
-      this.$set(this.datas, 'iconShape', 'circle')
+      this.datas.iconShape = 'circle'
     }
     if (this.datas.showBadge === undefined) {
-      this.$set(this.datas, 'showBadge', false)
+      this.datas.showBadge = false
     }
     if (!this.datas.badgeType) {
-      this.$set(this.datas, 'badgeType', 'hot')
+      this.datas.badgeType = 'hot'
     }
     if (!this.datas.badgeText) {
-      this.$set(this.datas, 'badgeText', 'HOT')
+      this.datas.badgeText = 'HOT'
     }
     if (!this.datas.badgeColor) {
-      this.$set(this.datas, 'badgeColor', '#ff4444')
+      this.datas.badgeColor = '#ff4444'
     }
     if (this.datas.cardPadding === undefined) {
-      this.$set(this.datas, 'cardPadding', 10)
+      this.datas.cardPadding = 10
     }
     if (!this.datas.cardBgColor) {
-      this.$set(this.datas, 'cardBgColor', '#ffffff')
+      this.datas.cardBgColor = '#ffffff'
     }
     this.datas.imageList.forEach((item) => {
       if (!item.http) item.http = {}

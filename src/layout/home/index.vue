@@ -225,7 +225,7 @@ const exportHTML = () => {
       pageSetup: datas.pageSetup,
       components: datas.pageComponents,
     })};
-  <\/script>
+  </` + `script>
 </body>
 </html>`
 

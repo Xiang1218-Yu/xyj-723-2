@@ -25,7 +25,7 @@
         :animation="200"
         class="drag-wrap"
       >
-        <template #item="{ element, index }">
+        <template #item="{ element }">
           <div
             class="rubiksCubeType0 rubiksCubeType"
             :class="{ 'clickable': datas.enableSingleLink }"
@@ -58,7 +58,7 @@
         :animation="200"
         class="drag-wrap"
       >
-        <template #item="{ element, index }">
+        <template #item="{ element }">
           <div
             class="rubiksCubeType1 rubiksCubeType"
             :class="{ 'clickable': datas.enableSingleLink }"
@@ -92,7 +92,7 @@
         :animation="200"
         class="drag-wrap"
       >
-        <template #item="{ element, index }">
+        <template #item="{ element }">
           <div
             class="rubiksCubeType2 rubiksCubeType"
             :class="{ 'clickable': datas.enableSingleLink }"
@@ -126,7 +126,7 @@
         :animation="200"
         class="drag-wrap"
       >
-        <template #item="{ element, index }">
+        <template #item="{ element }">
           <div
             class="rubiksCubeType3 rubiksCubeType"
             :class="{ 'clickable': datas.enableSingleLink }"

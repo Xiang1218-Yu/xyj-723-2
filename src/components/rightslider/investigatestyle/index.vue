@@ -163,19 +163,19 @@ export default {
   created() {
     // 初始化提交按钮默认值
     if (!this.datas.submitText) {
-      this.$set(this.datas, 'submitText', '提交')
+      this.datas.submitText = '提交'
     }
     if (!this.datas.submitBgColor) {
-      this.$set(this.datas, 'submitBgColor', '#3074f3')
+      this.datas.submitBgColor = '#3074f3'
     }
     if (!this.datas.submitTextColor) {
-      this.$set(this.datas, 'submitTextColor', '#fff')
+      this.datas.submitTextColor = '#fff'
     }
     if (this.datas.submitBtnRadius === undefined) {
-      this.$set(this.datas, 'submitBtnRadius', 20)
+      this.datas.submitBtnRadius = 20
     }
     if (this.datas.requiredMark === undefined) {
-      this.$set(this.datas, 'requiredMark', true)
+      this.datas.requiredMark = true
     }
   },
   mounted() {},
