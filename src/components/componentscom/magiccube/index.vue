@@ -19,18 +19,32 @@
       class="buju buju0"
       v-show="datas.rubiksCubeType === 0 && showimageList"
     >
-      <div
-        v-for="index in 2"
-        :key="index"
-        class="rubiksCubeType0 rubiksCubeType"
+      <draggable
+        v-model="datas.imageList"
+        item-key="src"
+        :animation="200"
+        class="drag-wrap"
       >
-        <img
-          draggable="false"
-          :src="datas.imageList[index - 1].src"
-          alt=""
-          :style="{ padding: datas.imgMargin / 2 + 'px' }"
-        />
-      </div>
+        <template #item="{ element }">
+          <div
+            class="rubiksCubeType0 rubiksCubeType"
+            :class="{ 'clickable': datas.enableSingleLink }"
+            @click="handleItemClick(element)"
+          >
+            <div class="img-container" :style="imgContainerStyle">
+              <img
+                draggable="false"
+                :src="element.src"
+                alt=""
+                :style="{
+                  padding: datas.imgMargin / 2 + 'px',
+                  'border-radius': datas.borderRadius + 'px',
+                }"
+              />
+            </div>
+          </div>
+        </template>
+      </draggable>
     </section>
 
     <!-- 一行三个 -->
@@ -38,18 +52,33 @@
       class="buju buju0"
       v-show="datas.rubiksCubeType === 1 && showimageList"
     >
-      <div
-        v-for="index in 3"
-        :key="index"
-        class="rubiksCubeType1 rubiksCubeType"
-        :style="{
-          margin: datas.imgMargin / 10 + '%',
-          width: 33.33 + '%',
-        }"
+      <draggable
+        v-model="datas.imageList"
+        item-key="src"
+        :animation="200"
+        class="drag-wrap"
       >
-      <!--    width: 33 - datas.imgMargin / 10 + '%', -->
-        <img draggable="false" :src="datas.imageList[index - 1].src" alt="" />
-      </div>
+        <template #item="{ element }">
+          <div
+            class="rubiksCubeType1 rubiksCubeType"
+            :class="{ 'clickable': datas.enableSingleLink }"
+            :style="{
+              margin: datas.imgMargin / 10 + '%',
+              width: 33.33 + '%',
+            }"
+            @click="handleItemClick(element)"
+          >
+            <div class="img-container" :style="imgContainerStyle">
+              <img
+                draggable="false"
+                :src="element.src"
+                alt=""
+                :style="{ 'border-radius': datas.borderRadius + 'px' }"
+              />
+            </div>
+          </div>
+        </template>
+      </draggable>
     </section>
 
     <!-- 一行四个 -->
@@ -57,17 +86,33 @@
       class="buju buju0"
       v-show="datas.rubiksCubeType === 2 && showimageList"
     >
-      <div
-        v-for="index in 4"
-        :key="index"
-        class="rubiksCubeType2 rubiksCubeType"
-        :style="{
-          margin: datas.imgMargin / 10 + '%',
-          width: 25 - datas.imgMargin / 10 + '%',
-        }"
+      <draggable
+        v-model="datas.imageList"
+        item-key="src"
+        :animation="200"
+        class="drag-wrap"
       >
-        <img draggable="false" :src="datas.imageList[index - 1].src" alt="" />
-      </div>
+        <template #item="{ element }">
+          <div
+            class="rubiksCubeType2 rubiksCubeType"
+            :class="{ 'clickable': datas.enableSingleLink }"
+            :style="{
+              margin: datas.imgMargin / 10 + '%',
+              width: 25 - datas.imgMargin / 10 + '%',
+            }"
+            @click="handleItemClick(element)"
+          >
+            <div class="img-container" :style="imgContainerStyle">
+              <img
+                draggable="false"
+                :src="element.src"
+                alt=""
+                :style="{ 'border-radius': datas.borderRadius + 'px' }"
+              />
+            </div>
+          </div>
+        </template>
+      </draggable>
     </section>
 
     <!-- 二左二右 -->
@@ -75,18 +120,32 @@
       class="buju buju0"
       v-show="datas.rubiksCubeType === 3 && showimageList"
     >
-      <div
-        v-for="index in 4"
-        :key="index"
-        class="rubiksCubeType3 rubiksCubeType"
+      <draggable
+        v-model="datas.imageList"
+        item-key="src"
+        :animation="200"
+        class="drag-wrap"
       >
-        <img
-          draggable="false"
-          :src="datas.imageList[index - 1].src"
-          alt=""
-          :style="{ padding: datas.imgMargin + 'px' }"
-        />
-      </div>
+        <template #item="{ element }">
+          <div
+            class="rubiksCubeType3 rubiksCubeType"
+            :class="{ 'clickable': datas.enableSingleLink }"
+            @click="handleItemClick(element)"
+          >
+            <div class="img-container" :style="imgContainerStyle">
+              <img
+                draggable="false"
+                :src="element.src"
+                alt=""
+                :style="{
+                  padding: datas.imgMargin + 'px',
+                  'border-radius': datas.borderRadius + 'px',
+                }"
+              />
+            </div>
+          </div>
+        </template>
+      </draggable>
     </section>
 
     <!-- 一左二右 -->
@@ -94,31 +153,55 @@
       class="buju buju4"
       v-show="datas.rubiksCubeType === 4 && showimageList"
     >
-      <div class="rubiksCubeType hw" style="padding-top: 100%">
-        <img
-          draggable="false"
-          :src="datas.imageList[0].src"
-          alt=""
-          style="height:300px"
-          :style="{ 'padding-right': datas.imgMargin + 'px' }"
-        />
-      </div>
-      <div style="display: inline-flex; flex-direction: column; width: 100%">
-        <div
-          class=" hw imgone"
-          v-for="index in 2"
-          :key="index"
-          style="padding-top: 150px;height:150px"
-        >
-          <img
-            draggable="false"
-            :src="datas.imageList[index].src"
-            alt=""
-            style="height:150px"
-            :style="{ padding: datas.imgMargin + 'px'}"
-          />
-        </div>
-      </div>
+      <draggable
+        v-model="datas.imageList"
+        item-key="src"
+        :animation="200"
+        class="drag-wrap buju4-drag"
+      >
+        <template #item="{ element, index }">
+          <div
+            v-if="index === 0"
+            class="rubiksCubeType hw"
+            :class="{ 'clickable': datas.enableSingleLink }"
+            :style="{ 'padding-top': aspectRatioPercent }"
+            @click="handleItemClick(element)"
+          >
+            <img
+              draggable="false"
+              :src="element.src"
+              alt=""
+              :style="{
+                'padding-right': datas.imgMargin + 'px',
+                'border-radius': datas.borderRadius + 'px',
+              }"
+            />
+          </div>
+          <div
+            v-else
+            style="display: inline-flex; flex-direction: column; width: 100%"
+          >
+            <div
+              class="hw imgone"
+              v-for="(subItem, subIndex) in datas.imageList.slice(1, 3)"
+              :key="subIndex"
+              :class="{ 'clickable': datas.enableSingleLink }"
+              :style="{ 'padding-top': aspectRatioPercent }"
+              @click="handleItemClick(subItem)"
+            >
+              <img
+                draggable="false"
+                :src="subItem.src"
+                alt=""
+                :style="{
+                  padding: datas.imgMargin + 'px',
+                  'border-radius': datas.borderRadius + 'px',
+                }"
+              />
+            </div>
+          </div>
+        </template>
+      </draggable>
     </section>
 
     <!-- 一上二下 -->
@@ -126,26 +209,39 @@
       class="buju buju5"
       v-show="datas.rubiksCubeType === 5 && showimageList"
     >
-      <div class="rubiksCubeType hw" style="display: block; padding-top: 50%">
+      <div
+        class="rubiksCubeType hw"
+        :class="{ 'clickable': datas.enableSingleLink }"
+        :style="{ display: 'block', 'padding-top': aspectRatioPercent }"
+        @click="handleItemClick(datas.imageList[0])"
+      >
         <img
           draggable="false"
           :src="datas.imageList[0].src"
           alt=""
-          :style="{ 'padding-bottom': datas.imgMargin + 'px' }"
+          :style="{
+            'padding-bottom': datas.imgMargin + 'px',
+            'border-radius': datas.borderRadius + 'px',
+          }"
         />
       </div>
       <div style="display: flex; width: 100%">
         <div
           class="rubiksCubeType hw imgtow"
-          v-for="index in 2"
+          v-for="(item, index) in datas.imageList.slice(1, 3)"
           :key="index"
-          style="padding-top: 50%"
+          :class="{ 'clickable': datas.enableSingleLink }"
+          :style="{ 'padding-top': aspectRatioPercent }"
+          @click="handleItemClick(item)"
         >
           <img
             draggable="false"
-            :src="datas.imageList[index].src"
+            :src="item.src"
             alt=""
-            :style="{ padding: datas.imgMargin + 'px' }"
+            :style="{
+              padding: datas.imgMargin + 'px',
+              'border-radius': datas.borderRadius + 'px',
+            }"
           />
         </div>
       </div>
@@ -157,18 +253,30 @@
       v-show="datas.rubiksCubeType === 6 && showimageList"
     >
       <!-- 第一张图片 -->
-      <div class="rubiksCubeType hw" style="padding-top: 100%">
+      <div
+        class="rubiksCubeType hw"
+        :class="{ 'clickable': datas.enableSingleLink }"
+        :style="{ 'padding-top': aspectRatioPercent }"
+        @click="handleItemClick(datas.imageList[0])"
+      >
         <img
           draggable="false"
           :src="datas.imageList[0].src"
           alt=""
-          style="height:300px"
-          :style="{ 'padding-right': datas.imgMargin + 'px' }"
+          :style="{
+            'padding-right': datas.imgMargin + 'px',
+            'border-radius': datas.borderRadius + 'px',
+          }"
         />
       </div>
       <div style="display: inline-flex; flex-direction: column; width: 100%">
         <!-- 第二张图片 -->
-        <div class="rubiksCubeType hw" style="padding-top: 150px">
+        <div
+          class="rubiksCubeType hw"
+          :class="{ 'clickable': datas.enableSingleLink }"
+          :style="{ 'padding-top': aspectRatioPercent }"
+          @click="handleItemClick(datas.imageList[1])"
+        >
           <img
             draggable="false"
             :src="datas.imageList[1].src"
@@ -176,6 +284,7 @@
             :style="{
               'padding-bottom': datas.imgMargin + 'px',
               'padding-left': datas.imgMargin + 'px',
+              'border-radius': datas.borderRadius + 'px',
             }"
           />
         </div>
@@ -186,19 +295,21 @@
               display: inline-flex;
               justify-content: center;
               align-items: center;
-              padding-top: 150px;
             "
-            v-for="index in 2"
+            :style="{ 'padding-top': aspectRatioPercent }"
+            v-for="(item, index) in datas.imageList.slice(2, 4)"
             :key="index"
+            :class="{ 'clickable': datas.enableSingleLink }"
+            @click="handleItemClick(item)"
           >
             <img
               draggable="false"
-              :src="datas.imageList[index + 1].src"
+              :src="item.src"
               alt=""
-              style="height:150px"
               :style="{
                 'padding-left': datas.imgMargin + 'px',
                 'padding-top': datas.imgMargin + 'px',
+                'border-radius': datas.borderRadius + 'px',
               }"
             />
           </div>
@@ -212,8 +323,11 @@
 </template>
 
 <script>
+import draggable from 'vuedraggable'
+
 export default {
   name: 'magiccube',
+  components: { draggable },
   props: {
     datas: Object,
   },
@@ -249,6 +363,35 @@ export default {
 
       return true
     },
+    /* 计算宽高比padding-top百分比 */
+    aspectRatioPercent() {
+      const ratio = this.datas.aspectRatio || '1:1'
+      const ratioMap = {
+        '1:1': '100%',
+        '4:3': '75%',
+        '16:9': '56.25%',
+        '3:4': '133.33%',
+      }
+      return ratioMap[ratio] || '100%'
+    },
+    imgContainerStyle() {
+      return {
+        'padding-top': this.aspectRatioPercent,
+      }
+    },
+  },
+  methods: {
+    /* 单格点击跳转 */
+    handleItemClick(item) {
+      if (!this.datas.enableSingleLink) return
+      if (item && item.linktype && item.http && item.http.externalLink) {
+        const link = item.http.externalLink
+        /* URL格式校验 */
+        if (/^https?:\/\//.test(link)) {
+          window.location.href = link
+        }
+      }
+    },
   },
 }
 </script>
@@ -256,6 +399,32 @@ export default {
 <style scoped lang="less">
 .magiccube {
   position: relative;
+  /* 拖拽容器 */
+  .drag-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    &.buju4-drag {
+      flex-wrap: nowrap;
+    }
+  }
+  /* 可点击样式 */
+  .clickable {
+    cursor: pointer;
+  }
+  /* 图片容器 - 用于padding-top比例 */
+  .img-container {
+    width: 100%;
+    position: relative;
+    img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
   /* 布局 */
   .imgone {
     &:last-of-type {
@@ -294,6 +463,7 @@ export default {
       left: 0;
       width: 100%;
       height: 100%;
+      object-fit: cover;
     }
   }
   .buju {
@@ -305,7 +475,6 @@ export default {
     &.buju4 {
       display: flex;
       width: 100%;
-      height: 300px;
       flex-direction: row;
       justify-content: space-around;
     }
@@ -319,10 +488,8 @@ export default {
       display: inline-flex;
       justify-content: center;
       align-items: center;
-      cursor: pointer;
       &.rubiksCubeType0 {
         width: 50%;
-        // height: 200px;
         &:first-of-type {
           img {
             padding-left: 0 !important;
@@ -339,8 +506,8 @@ export default {
         }
         img {
           width: 100%;
-          // height: 200px;
           display: block;
+          object-fit: cover;
         }
       }
       &.rubiksCubeType1 {
@@ -362,8 +529,8 @@ export default {
         }
         img {
           width: 100%;
-          height: 150px;
           display: block;
+          object-fit: cover;
         }
       }
       &.rubiksCubeType2 {
@@ -390,13 +557,12 @@ export default {
         }
         img {
           width: 100%;
-          height: 150px;
           display: block;
+          object-fit: cover;
         }
       }
       &.rubiksCubeType3 {
         width: 50%;
-        padding-top: 50%;
         position: relative;
         &:nth-of-type(1) {
           img {
@@ -428,15 +594,16 @@ export default {
           left: 0;
           width: 100%;
           height: 100%;
+          object-fit: cover;
         }
       }
       &.rubiksCubeType4 {
         width: 187px;
-        height: 187px;
         img {
           width: 100%;
           height: 100%;
           display: block;
+          object-fit: cover;
         }
       }
     }

@@ -4,7 +4,7 @@
     <h2>图片广告</h2>
 
     <!-- 表单 -->
-    <el-form label-width="80px" :model="datas">
+    <el-form label-width="80px" :model="datas" :rules="rules" ref="pictureadsForm">
       <!-- 标题内容 -->
       <el-form-item label="选择模板" class="lef">
         <p style="color: #000">{{ styleText }}</p>
@@ -170,6 +170,84 @@
         </el-radio-group>
       </el-form-item>
 
+      <!-- 轮播增强配置 - 仅在轮播模式下显示 -->
+      <template v-if="datas.swiperType !== 0">
+        <div style="height: 10px" />
+        <div class="bor"></div>
+        
+        <!-- 自动播放 -->
+        <el-form-item class="lef" label="自动播放">
+          {{ datas.autoplayEnabled ? '开启' : '关闭' }}
+          <el-checkbox style="margin-left: 196px" v-model="datas.autoplayEnabled" />
+        </el-form-item>
+        
+        <!-- 自动播放间隔 -->
+        <el-form-item 
+          label="播放间隔" 
+          class="lef" 
+          prop="autoplayDelay"
+          v-show="datas.autoplayEnabled"
+        >
+          <el-slider
+            v-model="datas.autoplayDelay"
+            :min="1000"
+            :max="8000"
+            :step="500"
+            input-size="small"
+            show-input
+          ></el-slider>
+        </el-form-item>
+        
+        <!-- 循环播放 -->
+        <el-form-item class="lef" label="循环播放">
+          {{ datas.loopEnabled ? '开启' : '关闭' }}
+          <el-checkbox style="margin-left: 196px" v-model="datas.loopEnabled" />
+        </el-form-item>
+        
+        <!-- 过渡效果 -->
+        <el-form-item label="过渡效果" class="lef" prop="transitionEffect">
+          <el-select v-model="datas.transitionEffect" placeholder="请选择过渡效果" style="width: 100%">
+            <el-option label="滑动" value="slide"></el-option>
+            <el-option label="淡入" value="fade"></el-option>
+            <el-option label="方块" value="cube"></el-option>
+            <el-option label="流" value="coverflow"></el-option>
+          </el-select>
+        </el-form-item>
+        
+        <!-- 切换速度 -->
+        <el-form-item label="切换速度" class="lef" prop="speed">
+          <el-slider
+            v-model="datas.speed"
+            :min="100"
+            :max="1000"
+            :step="50"
+            input-size="small"
+            show-input
+          ></el-slider>
+        </el-form-item>
+        
+        <!-- 显示箭头 -->
+        <el-form-item class="lef" label="显示箭头">
+          {{ datas.showArrows ? '显示' : '隐藏' }}
+          <el-checkbox style="margin-left: 196px" v-model="datas.showArrows" />
+        </el-form-item>
+        
+        <!-- 箭头颜色 -->
+        <el-form-item 
+          label="箭头颜色" 
+          class="lef"
+          v-show="datas.showArrows"
+        >
+          <el-color-picker
+            v-model="datas.arrowColor"
+            show-alpha
+            class="picke"
+            :predefine="predefineColors"
+          >
+          </el-color-picker>
+        </el-form-item>
+      </template>
+
       <div style="height: 10px" />
 
       <!-- 图片倒角 -->
@@ -231,6 +309,22 @@ export default {
     datas: Object,
   },
   data() {
+    // 自动播放间隔范围校验
+    const validateAutoplayDelay = (rule, value, callback) => {
+      if (value < 1000 || value > 8000) {
+        callback(new Error('自动播放间隔应在1000-8000ms之间'))
+      } else {
+        callback()
+      }
+    }
+    // 切换速度范围校验
+    const validateSpeed = (rule, value, callback) => {
+      if (value < 100 || value > 1000) {
+        callback(new Error('切换速度应在100-1000ms之间'))
+      } else {
+        callback()
+      }
+    }
     return {
       optionsType: [
         {
@@ -243,6 +337,29 @@ export default {
         },
       ], // 选择跳转类型
       emptyText: '',
+      rules: {
+        autoplayDelay: [
+          { validator: validateAutoplayDelay, trigger: 'change' }
+        ],
+        speed: [
+          { validator: validateSpeed, trigger: 'change' }
+        ],
+      },
+      predefineColors: [
+        // 颜色选择器预设
+        '#ff4500',
+        '#ff8c00',
+        '#ffd700',
+        '#90ee90',
+        '#00ced1',
+        '#1e90ff',
+        '#c71585',
+        '#409EFF',
+        '#909399',
+        '#C0C4CC',
+        '#ffffff',
+        '#000000',
+      ],
     }
   },
 

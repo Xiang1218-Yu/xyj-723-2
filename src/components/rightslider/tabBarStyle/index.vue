@@ -79,11 +79,25 @@
             <!-- 标题和链接 -->
             <div class="imgText">
               <div class="imgText-top">
-                <el-input v-model="element.iconText" placeholder="导航名称" />
-                <div class="imgText-top-r">
-                  <span>小圆点</span>
-                  <el-checkbox v-model="element.isDot"></el-checkbox>
-                </div>
+                <el-input v-model="element.iconText" placeholder="导航名称" maxlength="10" />
+              </div>
+              <!-- 徽标设置 -->
+              <div class="imgText-badge">
+                <span class="badge-label">徽标:</span>
+                <el-select v-model="element.iconBadge" placeholder="无" size="mini" class="badge-select">
+                  <el-option label="无" value=""></el-option>
+                  <el-option label="红点" value="dot"></el-option>
+                  <el-option label="数字" value="number"></el-option>
+                </el-select>
+                <el-input-number
+                  v-if="element.iconBadge === 'number'"
+                  v-model="element.badgeNumber"
+                  :min="0"
+                  :max="99"
+                  size="mini"
+                  class="badge-number"
+                  @change="validateBadgeNumber(index)"
+                ></el-input-number>
               </div>
               <!-- 标题和链接 -->
               <div class="imgTextChild">
@@ -187,6 +201,16 @@ export default {
   mounted() {},
 
   methods: {
+    // 校验徽标数字范围
+    validateBadgeNumber(index) {
+      const item = this.datas.iconList[index]
+      if (item.badgeNumber > 99) {
+        item.badgeNumber = 99
+      } else if (item.badgeNumber < 0) {
+        item.badgeNumber = 0
+      }
+      item.iconBadge = item.badgeNumber
+    },
     // 提交
     uploadInformation(res) {
       if (this.replaceIconIndex == 1) {
@@ -207,6 +231,10 @@ export default {
         inactive: res,
         /** 是否显示小圆点 */
         isDot: false,
+        /** 徽标类型: ''无, 'dot'红点, 数字显示角标 */
+        iconBadge: '',
+        /** 徽标数字 */
+        badgeNumber: 0,
         /** 跳转类型 */
         linktype: '10',
         /** 跳转参数 */
@@ -324,14 +352,35 @@ export default {
       flex-direction: column;
       box-sizing: border-box;
       justify-content: space-around;
+      flex: 1;
+      /* 徽标设置 */
+      .imgText-badge {
+        display: flex;
+        align-items: center;
+        margin: 6px 0;
+        .badge-label {
+          font-size: 12px;
+          color: #666;
+          margin-right: 8px;
+        }
+        .badge-select {
+          width: 80px;
+        }
+        .badge-number {
+          width: 80px;
+          margin-left: 8px;
+        }
+      }
       /* 图片字 */
       .imgTextChild {
         width: 100%;
         display: flex;
         box-sizing: border-box;
         justify-content: space-between;
+        flex-direction: column;
         .fir-sele.el-select {
-          width: 40%;
+          width: 100%;
+          margin-bottom: 6px;
         }
       }
       .imgText-top {

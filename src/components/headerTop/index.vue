@@ -3,11 +3,13 @@
     class="headerTop"
     :style="{
       height: pageSetup.titleHeight + 'px',
+      background: pageSetup.titleBgColor || '#ffffff',
+      color: pageSetup.titleTextColor || '#333333',
     }"
   >
     <!-- 左半部分 -->
     <div class="lef" v-show="pageSetup.isBack">
-      <van-icon name="arrow-left" />
+      <van-icon name="arrow-left" :color="pageSetup.titleTextColor || '#333333'" />
     </div>
     <!-- 标题 -->
     <div
@@ -15,13 +17,14 @@
       :style="{
         height: pageSetup.titleHeight + 'px',
         'line-height': pageSetup.titleHeight + 'px',
+        color: pageSetup.titleTextColor || '#333333',
       }"
     >
       {{ pageSetup.name }}
     </div>
     <!-- 右半部分 -->
     <div class="rig" v-show="pageSetup.isPerson">
-      <span>个人中心</span>
+      <span :style="{ color: pageSetup.titleTextColor || '#333333' }">个人中心</span>
     </div>
   </div>
 </template>
@@ -69,9 +72,6 @@ export default {
   }
   /* 右边 */
   .rig {
-    // display: flex;
-    // align-items: center;
-    // height: 100%;
     position: absolute;
     right: 18px;
     top: 50%;

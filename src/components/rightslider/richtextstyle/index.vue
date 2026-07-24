@@ -3,7 +3,7 @@
     <!-- 标题 -->
     <h2>{{ datas.text }}</h2>
 
-    <el-form label-width="80px" :model="datas">
+    <el-form label-width="80px" :model="datas" :rules="rules" ref="richtextForm">
       <!-- 背景颜色 -->
       <el-form-item label="背景颜色">
         <!-- 背景颜色 -->
@@ -15,6 +15,41 @@
           :predefine="predefineColors"
         >
         </el-color-picker>
+      </el-form-item>
+
+      <!-- 默认行高 -->
+      <el-form-item label="默认行高" prop="lineHeight">
+        <el-select v-model="datas.lineHeight" placeholder="请选择行高" style="width: 100%">
+          <el-option
+            v-for="item in lineHeightOptions"
+            :key="item"
+            :label="item"
+            :value="item"
+          >
+          </el-option>
+        </el-select>
+      </el-form-item>
+
+      <!-- 默认字号 -->
+      <el-form-item label="默认字号" prop="fontSize">
+        <el-select v-model="datas.fontSize" placeholder="请选择字号" style="width: 100%">
+          <el-option
+            v-for="item in fontSizeOptions"
+            :key="item"
+            :label="item"
+            :value="item"
+          >
+          </el-option>
+        </el-select>
+      </el-form-item>
+
+      <!-- 缩进大小 -->
+      <el-form-item label="缩进大小" prop="indentSize">
+        <el-input
+          v-model="datas.indentSize"
+          placeholder="请输入缩进大小，如：2em"
+        >
+        </el-input>
       </el-form-item>
     </el-form>
 
@@ -61,7 +96,62 @@ export default {
     Editor,
   },
   data() {
+    // 行高格式校验
+    const validateLineHeight = (rule, value, callback) => {
+      if (!value) {
+        callback(new Error('请选择行高'))
+      } else {
+        const validLineHeights = ['1', '1.2', '1.5', '1.6', '1.8', '2', '2.5', '3']
+        if (validLineHeights.indexOf(value) === -1) {
+          callback(new Error('请选择有效的行高值'))
+        } else {
+          callback()
+        }
+      }
+    }
+    // 字号格式校验
+    const validateFontSize = (rule, value, callback) => {
+      if (!value) {
+        callback(new Error('请选择字号'))
+      } else {
+        const regex = /^(1[2-9]|[23][0-6])px$/
+        if (!regex.test(value)) {
+          callback(new Error('请选择有效的字号(12px-36px)'))
+        } else {
+          callback()
+        }
+      }
+    }
+    // 缩进格式校验
+    const validateIndentSize = (rule, value, callback) => {
+      if (value) {
+        const regex = /^\d+(\.\d+)?(em|px|%)$/
+        if (!regex.test(value)) {
+          callback(new Error('请输入有效的缩进值，如：2em或20px'))
+        } else {
+          callback()
+        }
+      } else {
+        callback()
+      }
+    }
     return {
+      lineHeightOptions: ['1', '1.2', '1.5', '1.6', '1.8', '2', '2.5', '3'],
+      fontSizeOptions: [
+        '12px', '13px', '14px', '15px', '16px', '18px',
+        '20px', '24px', '28px', '32px', '36px'
+      ],
+      rules: {
+        lineHeight: [
+          { required: true, validator: validateLineHeight, trigger: 'change' }
+        ],
+        fontSize: [
+          { required: true, validator: validateFontSize, trigger: 'change' }
+        ],
+        indentSize: [
+          { validator: validateIndentSize, trigger: 'blur' }
+        ]
+      },
       init: {
         height: 550,
         language_url: '/langs/zh_CN.js',
@@ -90,9 +180,12 @@ export default {
           'save',
         ],
         image_advtab: true,
+        content_style: '',
+        fontsize_formats: '',
+        lineheight_formats: '',
         toolbar: [
           `fullscreen code bold italic underline strikethrough alignleft aligncenter alignright alignjustify 
-          outdent indent image link removeformat cut copy paste ltr rtl anchor restoredraft pagebreak save 
+          outdent indent lineheight image link removeformat cut copy paste ltr rtl anchor restoredraft pagebreak save 
           table tabledelete tableprops tablerowprops tablecellprops tableinsertrowbefore tableinsertrowafter tabledeleterow tableinsertcolbefore tableinsertcolafter tabledeletecol 
           backcolor formatselect fontselect fontsizeselect forecolor 
           subscript superscript hr preview print searchreplace wordcount toc charmap bullist numlist insertdatetime undo redo`,
@@ -147,6 +240,40 @@ export default {
         '#c7158577',
       ],
     }
+  },
+  watch: {
+    'datas.fontSize': {
+      handler() {
+        this.updateInitConfig()
+      },
+      immediate: true,
+    },
+    'datas.lineHeight': {
+      handler() {
+        this.updateInitConfig()
+      },
+      immediate: true,
+    },
+    'datas.fontsizeFormats': {
+      handler() {
+        this.updateInitConfig()
+      },
+      immediate: true,
+    },
+    'datas.lineHeightFormats': {
+      handler() {
+        this.updateInitConfig()
+      },
+      immediate: true,
+    },
+  },
+  methods: {
+    // 更新TinyMCE初始化配置
+    updateInitConfig() {
+      this.init.content_style = `body { font-size: ${this.datas.fontSize}; line-height: ${this.datas.lineHeight}; }`
+      this.init.fontsize_formats = this.datas.fontsizeFormats || '12px 14px 16px 18px 20px 24px 28px 32px 36px'
+      this.init.lineheight_formats = this.datas.lineHeightFormats || '1 1.2 1.5 1.6 1.8 2 2.5 3'
+    },
   },
 }
 </script>

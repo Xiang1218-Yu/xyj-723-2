@@ -4,12 +4,13 @@
     <h2>{{ datas.text }}</h2>
 
     <!-- 表单 -->
-    <el-form label-width="80px" :model="datas" :rules="rules">
+    <el-form label-width="100px" :model="datas" :rules="rules">
       <!-- 标题内容 -->
       <el-form-item label="标题内容">
         <el-input
           v-model="datas.name"
           placeholder="请输入标题"
+          maxlength="30"
           show-word-limit
         />
       </el-form-item>
@@ -23,8 +24,65 @@
           v-model="datas.description"
           placeholder="请输入要说明的文字，最多 100 字"
           maxlength="100"
+          show-word-limit
         />
       </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- 显示左侧图标 -->
+      <el-form-item label="显示左侧图标">
+        <el-switch v-model="datas.showLeftIcon"></el-switch>
+      </el-form-item>
+
+      <!-- 左侧图标上传/URL -->
+      <div v-if="datas.showLeftIcon">
+        <el-form-item label="左侧图标">
+          <el-input v-model="datas.leftIcon" placeholder="请输入图标URL或上传" />
+        </el-form-item>
+        <el-form-item label="图标大小">
+          <el-slider
+            v-model="datas.leftIconSize"
+            :min="12"
+            :max="36"
+            show-input
+          />
+        </el-form-item>
+      </div>
+
+      <div style="height: 10px" />
+
+      <!-- 标题渐变 -->
+      <el-form-item label="标题渐变">
+        <el-switch v-model="datas.gradientEnabled"></el-switch>
+      </el-form-item>
+
+      <!-- 渐变设置 -->
+      <div v-if="datas.gradientEnabled" class="gradient-settings">
+        <el-form-item label="渐变起始色">
+          <el-color-picker
+            v-model="datas.gradientStart"
+            show-alpha
+            class="picke"
+            :predefine="predefineColors"
+          />
+        </el-form-item>
+        <el-form-item label="渐变结束色">
+          <el-color-picker
+            v-model="datas.gradientEnd"
+            show-alpha
+            class="picke"
+            :predefine="predefineColors"
+          />
+        </el-form-item>
+        <el-form-item label="渐变方向">
+          <el-radio-group v-model="datas.gradientDirection">
+            <el-radio label="to right">从左到右</el-radio>
+            <el-radio label="to bottom">从上到下</el-radio>
+            <el-radio label="to right bottom">对角线</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </div>
 
       <div style="height: 10px" />
 
@@ -57,11 +115,11 @@
         prop="wordSize"
         :hide-required-asterisk="true"
       >
-        <el-input
-          type="number"
-          v-model.number="datas.wordSize"
-          placeholder="请输入标题文字大小"
-          :maxlength="2"
+        <el-slider
+          v-model="datas.wordSize"
+          :min="10"
+          :max="72"
+          show-input
         />
       </el-form-item>
 
@@ -73,10 +131,11 @@
         prop="descriptionSize"
         :hide-required-asterisk="true"
       >
-        <el-input
-          type="number"
-          v-model.number="datas.descriptionSize"
-          placeholder="请输入描述文字大小"
+        <el-slider
+          v-model="datas.descriptionSize"
+          :min="10"
+          :max="72"
+          show-input
         />
       </el-form-item>
 
@@ -88,10 +147,12 @@
         prop="wordWeight"
         :hide-required-asterisk="true"
       >
-        <el-input
-          type="number"
-          v-model.number="datas.wordWeight"
-          placeholder="请输入标题粗细"
+        <el-slider
+          v-model="datas.wordWeight"
+          :min="100"
+          :max="900"
+          :step="100"
+          show-input
         />
       </el-form-item>
 
@@ -103,10 +164,12 @@
         prop="descriptionWeight"
         :hide-required-asterisk="true"
       >
-        <el-input
-          type="number"
-          v-model.number="datas.descriptionWeight"
-          placeholder="请输入描述粗细"
+        <el-slider
+          v-model="datas.descriptionWeight"
+          :min="100"
+          :max="900"
+          :step="100"
+          show-input
         />
       </el-form-item>
 
@@ -127,7 +190,7 @@
       <div style="height: 10px" />
 
       <!-- 标题颜色 -->
-      <el-form-item label="标题颜色">
+      <el-form-item label="标题颜色" v-if="!datas.gradientEnabled">
         <!-- 颜色选择器 -->
         <el-color-picker
           v-model="datas.wordColor"
@@ -234,23 +297,29 @@ export default {
     datas: Object,
   },
   data() {
-    let checkAge = (rule, value, callback) => {
-      if (value.length === 0) callback(new Error('请输入有效数字'))
-      if (value > 99) callback(new Error('数字最大为99'))
-    }
-    let kon = (rule, value, callback) => {
-      if (value.length === 0) callback(new Error('请输入有效数字'))
+    let validateRange = (min, max) => {
+      return (rule, value, callback) => {
+        if (value === null || value === undefined || value === '') {
+          callback(new Error('请输入有效数字'))
+        } else if (value < min) {
+          callback(new Error(`数字最小为${min}`))
+        } else if (value > max) {
+          callback(new Error(`数字最大为${max}`))
+        } else {
+          callback()
+        }
+      }
     }
     return {
       options: [],
       rules: {
-        wordSize: [{ required: true, validator: checkAge, trigger: 'blur' }],
+        wordSize: [{ required: true, validator: validateRange(10, 72), trigger: 'blur' }],
         descriptionSize: [
-          { required: true, validator: checkAge, trigger: 'blur' },
+          { required: true, validator: validateRange(10, 72), trigger: 'blur' },
         ],
-        wordWeight: [{ required: true, validator: kon, trigger: 'blur' }],
+        wordWeight: [{ required: true, validator: validateRange(100, 900), trigger: 'blur' }],
         descriptionWeight: [
-          { required: true, validator: kon, trigger: 'blur' },
+          { required: true, validator: validateRange(100, 900), trigger: 'blur' },
         ],
       },
       predefineColors: [
@@ -275,6 +344,31 @@ export default {
       ],
     }
   },
+  created() {
+    // 初始化左侧图标默认值
+    if (this.datas.showLeftIcon === undefined) {
+      this.datas.showLeftIcon = false
+    }
+    if (!this.datas.leftIcon) {
+      this.datas.leftIcon = ''
+    }
+    if (!this.datas.leftIconSize) {
+      this.datas.leftIconSize = 20
+    }
+    // 初始化渐变默认值
+    if (this.datas.gradientEnabled === undefined) {
+      this.datas.gradientEnabled = false
+    }
+    if (!this.datas.gradientStart) {
+      this.datas.gradientStart = '#ff6b6b'
+    }
+    if (!this.datas.gradientEnd) {
+      this.datas.gradientEnd = '#4ecdc4'
+    }
+    if (!this.datas.gradientDirection) {
+      this.datas.gradientDirection = 'to right'
+    }
+  },
   methods: {},
 }
 </script>
@@ -296,6 +390,14 @@ export default {
     font-size: 18px;
     font-weight: 600;
     color: #323233;
+  }
+
+  /* 渐变设置 */
+  .gradient-settings {
+    background: #f9f9f9;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 10px;
   }
 
   /* 颜色选择器 */
