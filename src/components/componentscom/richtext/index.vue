@@ -1,5 +1,14 @@
 <template>
-  <div class="richtext" :style="{ background: datas.backColor }">
+  <div
+    class="richtext"
+    :style="{
+      background: datas.backColor,
+      // #1 将默认字号/行高/缩进作为容器样式注入
+      fontSize: datas.fontSize + 'px',
+      lineHeight: datas.lineHeight,
+      textIndent: datas.indent + 'px',
+    }"
+  >
     <img
       draggable="false"
       src="../../../assets/images/fwb.png"

@@ -320,6 +320,31 @@
         >
         </el-slider>
       </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- #9 图片比例 -->
+      <el-form-item label="图片比例" class="lef">
+        <el-radio-group v-model="datas.aspectRatio">
+          <el-radio label="1:1">1:1</el-radio>
+          <el-radio label="4:3">4:3</el-radio>
+          <el-radio label="16:9">16:9</el-radio>
+          <el-radio label="3:4">3:4</el-radio>
+        </el-radio-group>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- #9 图片圆角 -->
+      <el-form-item label="图片圆角" class="lef">
+        <el-slider
+          v-model="datas.borderRadius"
+          :max="30"
+          input-size="small"
+          show-input
+        >
+        </el-slider>
+      </el-form-item>
     </el-form>
 
     <!-- 上传图片 -->

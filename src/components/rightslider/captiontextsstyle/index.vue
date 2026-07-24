@@ -4,15 +4,77 @@
     <h2>{{ datas.text }}</h2>
 
     <!-- 表单 -->
-    <el-form label-width="80px" :model="datas" :rules="rules">
+    <el-form label-width="80px" :model="datas" :rules="rules" ref="form">
       <!-- 标题内容 -->
       <el-form-item label="标题内容">
         <el-input
           v-model="datas.name"
           placeholder="请输入标题"
           show-word-limit
+          maxlength="20"
         />
       </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- #7 左侧图标 -->
+      <el-form-item label="左侧图标">
+        <div class="icon-upload">
+          <img v-if="datas.leftIcon" :src="datas.leftIcon" class="icon-preview" />
+          <div v-else class="icon-placeholder">无图标</div>
+          <el-button size="mini" @click="$refs.iconUpload.showUpload()"
+            >上传图标</el-button
+          >
+          <el-button
+            size="mini"
+            type="danger"
+            plain
+            @click="datas.leftIcon = ''"
+            v-if="datas.leftIcon"
+            >清除</el-button
+          >
+        </div>
+      </el-form-item>
+
+      <!-- #7 图标大小 -->
+      <el-form-item label="图标大小" v-if="datas.leftIcon">
+        <el-slider
+          v-model="datas.leftIconSize"
+          :min="12"
+          :max="48"
+          input-size="small"
+          show-input
+        />
+      </el-form-item>
+
+      <!-- #7 小标题渐变 -->
+      <el-form-item label="标题渐变">
+        {{ datas.gradientTitle ? '开' : '关' }}
+        <el-checkbox
+          style="margin-left: 196px"
+          v-model="datas.gradientTitle"
+        />
+      </el-form-item>
+
+      <!-- #7 渐变颜色选择 -->
+      <template v-if="datas.gradientTitle">
+        <el-form-item label="渐变起色">
+          <el-color-picker
+            v-model="datas.gradientStart"
+            show-alpha
+            class="picke"
+            :predefine="predefineColors"
+          />
+        </el-form-item>
+        <el-form-item label="渐变止色">
+          <el-color-picker
+            v-model="datas.gradientEnd"
+            show-alpha
+            class="picke"
+            :predefine="predefineColors"
+          />
+        </el-form-item>
+      </template>
 
       <div style="height: 10px" />
 
@@ -41,11 +103,6 @@
             class="iconfont icon-juzhong"
             @click="datas.positions = 'center'"
           />
-          <!-- <i
-          :class="datas.positions === 'right' ? 'active': ''"
-          class="iconfont icon-juyou"
-          @click="datas.positions = 'right'"
-          /> -->
         </div>
       </el-form-item>
 
@@ -57,11 +114,11 @@
         prop="wordSize"
         :hide-required-asterisk="true"
       >
-        <el-input
-          type="number"
+        <el-input-number
           v-model.number="datas.wordSize"
-          placeholder="请输入标题文字大小"
-          :maxlength="2"
+          :min="10"
+          :max="48"
+          controls-position="right"
         />
       </el-form-item>
 
@@ -73,10 +130,11 @@
         prop="descriptionSize"
         :hide-required-asterisk="true"
       >
-        <el-input
-          type="number"
+        <el-input-number
           v-model.number="datas.descriptionSize"
-          placeholder="请输入描述文字大小"
+          :min="10"
+          :max="36"
+          controls-position="right"
         />
       </el-form-item>
 
@@ -127,7 +185,7 @@
       <div style="height: 10px" />
 
       <!-- 标题颜色 -->
-      <el-form-item label="标题颜色">
+      <el-form-item label="标题颜色" v-if="!datas.gradientTitle">
         <!-- 颜色选择器 -->
         <el-color-picker
           v-model="datas.wordColor"
@@ -200,6 +258,8 @@
           type="text"
           style="width: 110px; margin: 15px"
           v-model="datas.more.text"
+          maxlength="10"
+          placeholder="查看更多"
         />
 
         <div style="height: 10px" />
@@ -219,27 +279,42 @@
             v-model="datas.more.http"
             placeholder="请输入跳转链接"
             show-word-limit
+            maxlength="500"
             style="margin-top: 10px"
           />
         </el-form-item>
       </div>
     </el-form>
+
+    <!-- #7 上传图标 -->
+    <uploadimg ref="iconUpload" @uploadInformation="uploadIcon" />
   </section>
 </template>
 
 <script>
+import uploadimg from '../../uploadImg' //图片上传
+
 export default {
   name: 'captiontextsstyle',
+  components: { uploadimg },
   props: {
     datas: Object,
   },
   data() {
     let checkAge = (rule, value, callback) => {
-      if (value.length === 0) callback(new Error('请输入有效数字'))
+      if (value === '' || value === null || value === undefined)
+        return callback(new Error('请输入有效数字'))
+      if (typeof value !== 'number' || isNaN(value))
+        return callback(new Error('必须为数字'))
       if (value > 99) callback(new Error('数字最大为99'))
+      callback()
     }
     let kon = (rule, value, callback) => {
-      if (value.length === 0) callback(new Error('请输入有效数字'))
+      if (value === '' || value === null || value === undefined)
+        return callback(new Error('请输入有效数字'))
+      if (typeof value !== 'number' || isNaN(value))
+        return callback(new Error('必须为数字'))
+      callback()
     }
     return {
       options: [],
@@ -275,7 +350,16 @@ export default {
       ],
     }
   },
-  methods: {},
+  methods: {
+    // #7 上传图标回调
+    uploadIcon(res) {
+      // 校验图标URL格式
+      if (typeof res !== 'string' || !/^https?:\/\/.+/i.test(res)) {
+        return
+      }
+      this.datas.leftIcon = res
+    },
+  },
 }
 </script>
 
@@ -301,6 +385,29 @@ export default {
   /* 颜色选择器 */
   .picke {
     float: right;
+  }
+
+  /* #7 图标上传 */
+  .icon-upload {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    .icon-preview {
+      width: 32px;
+      height: 32px;
+      object-fit: contain;
+    }
+    .icon-placeholder {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f5f5;
+      color: #999;
+      font-size: 10px;
+      border-radius: 4px;
+    }
   }
 
   /* 位置 */

@@ -189,6 +189,82 @@
 
       <div class="bor" />
 
+      <!-- #14 标签编辑 -->
+      <el-form-item class="lef" label="标签编辑">
+        <div class="tag-edit">
+          <el-tag
+            v-for="(tag, idx) in datas.tagList"
+            :key="idx"
+            closable
+            size="mini"
+            @close="removeTag(idx)"
+            style="margin: 2px"
+          >{{ tag }}</el-tag>
+          <el-input
+            v-if="tagInputVisible"
+            ref="tagInput"
+            v-model="tagInputValue"
+            size="mini"
+            style="width: 90px"
+            @keyup.enter.native="addTag"
+            @blur="addTag"
+          />
+          <el-button v-else size="mini" @click="showTagInput">+标签</el-button>
+        </div>
+      </el-form-item>
+
+      <!-- #14 作者信息 -->
+      <el-form-item class="lef" label="作者名称">
+        <el-input
+          v-model="datas.authorName"
+          placeholder="作者名称(可留空)"
+          maxlength="20"
+          size="mini"
+        />
+      </el-form-item>
+      <el-form-item class="lef" label="作者头像">
+        <div style="display:flex;align-items:center;gap:8px">
+          <img
+            v-if="datas.authorAvatar"
+            :src="datas.authorAvatar"
+            style="width:32px;height:32px;border-radius:50%"
+          />
+          <el-button size="mini" @click="$refs.avatarUpload.showUpload()">上传</el-button>
+          <el-button v-if="datas.authorAvatar" size="mini" type="danger" plain @click="datas.authorAvatar=''">清除</el-button>
+        </div>
+      </el-form-item>
+
+      <!-- #14 多图模式 -->
+      <el-form-item class="lef" label="多图模式">
+        {{ datas.multiImage ? '开' : '关' }}
+        <el-checkbox style="margin-left: 180px" v-model="datas.multiImage" />
+      </el-form-item>
+
+      <!-- #14 阅读数(可填) -->
+      <el-form-item class="lef" label="阅读数值">
+        <el-input-number
+          v-model.number="datas.readCount"
+          :min="0"
+          :max="9999999"
+          controls-position="right"
+          size="mini"
+          style="width: 150px"
+        />
+      </el-form-item>
+      <!-- #14 点赞数(可填) -->
+      <el-form-item class="lef" label="点赞数值">
+        <el-input-number
+          v-model.number="datas.likeCount"
+          :min="0"
+          :max="9999999"
+          controls-position="right"
+          size="mini"
+          style="width: 150px"
+        />
+      </el-form-item>
+
+      <div class="bor" />
+
       <!--笔记标签 -->
       <el-form-item class="lef" label="笔记标签">
         {{ datas.noteLabels ? '显示' : '隐藏' }}
@@ -245,6 +321,8 @@
 
     <!-- 上传图片 -->
     <uploadimg ref="upload" @uploadInformation="uploadInformation" />
+    <!-- #14 作者头像上传 -->
+    <uploadimg ref="avatarUpload" @uploadInformation="uploadAvatar" />
   </div>
 </template>
 
@@ -336,10 +414,47 @@ export default {
       ], // 选择跳转类型
       options: [], //后端返回的列表提供下拉选择
       emptyText: '',
+      // #14 标签编辑状态
+      tagInputVisible: false,
+      tagInputValue: '',
     }
   },
   created() {},
   methods: {
+    // #14 显示标签输入
+    showTagInput() {
+      this.tagInputVisible = true
+      this.tagInputValue = ''
+      this.$nextTick(() => {
+        if (this.$refs.tagInput) this.$refs.tagInput.focus()
+      })
+    },
+    // #14 添加标签（长度校验：最多5个，每个最长8字）
+    addTag() {
+      const val = (this.tagInputValue || '').trim()
+      if (!val) {
+        this.tagInputVisible = false
+        return
+      }
+      if (val.length > 8) return
+      if (!Array.isArray(this.datas.tagList)) this.datas.tagList = []
+      if (this.datas.tagList.length >= 5) {
+        this.tagInputVisible = false
+        return
+      }
+      this.datas.tagList.push(val)
+      this.tagInputVisible = false
+      this.tagInputValue = ''
+    },
+    // #14 删除标签
+    removeTag(idx) {
+      this.datas.tagList.splice(idx, 1)
+    },
+    // #14 上传头像回调（格式校验）
+    uploadAvatar(res) {
+      if (typeof res !== 'string' || !/^https?:\/\/.+/i.test(res)) return
+      this.datas.authorAvatar = res
+    },
     selectType(index) {
       // 每次切换类型之前 清空之前选中跳转
       this.datas.imageList[index].http = {}

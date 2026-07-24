@@ -54,8 +54,44 @@
         </el-slider>
       </el-form-item>
 
+      <!-- #15 渐变背景 -->
+      <el-form-item label="渐变背景" class="lef">
+        {{ datas.gradientBg ? '开' : '关' }}
+        <el-checkbox
+          style="margin-left: 180px"
+          v-model="datas.gradientBg"
+        />
+      </el-form-item>
+
+      <!-- #15 渐变颜色 -->
+      <template v-if="datas.gradientBg">
+        <el-form-item label="渐变起色" class="lef">
+          <el-color-picker
+            v-model="datas.gradientStart"
+            show-alpha
+            :predefine="predefineColors"
+          />
+        </el-form-item>
+        <el-form-item label="渐变止色" class="lef">
+          <el-color-picker
+            v-model="datas.gradientEnd"
+            show-alpha
+            :predefine="predefineColors"
+          />
+        </el-form-item>
+        <el-form-item label="渐变角度" class="lef">
+          <el-slider
+            v-model="datas.gradientAngle"
+            :min="0"
+            :max="360"
+            input-size="small"
+            show-input
+          />
+        </el-form-item>
+      </template>
+
       <!-- 背景颜色 -->
-      <el-form-item label="背景颜色" class="lef">
+      <el-form-item label="背景颜色" class="lef" v-if="!datas.gradientBg">
         <!-- 颜色选择器 -->
         <el-color-picker
           v-model="datas.bgColor"
@@ -65,7 +101,27 @@
         </el-color-picker>
       </el-form-item>
 
-      <el-form-item label="背景图片">
+      <!-- #15 标题字色 -->
+      <el-form-item label="标题字色" class="lef">
+        <el-color-picker
+          v-model="datas.titleColor"
+          :predefine="predefineColors"
+        />
+      </el-form-item>
+
+      <!-- #15 外边距 -->
+      <el-form-item label="外边距" class="lef-height">
+        <el-slider
+          v-model="datas.outerMargin"
+          :max="30"
+          :min="0"
+          input-size="small"
+          show-input
+        >
+        </el-slider>
+      </el-form-item>
+
+      <el-form-item label="背景图片" v-if="!datas.gradientBg">
         <div class="shop-head-pic" style="text-align: center">
           <img class="home-bg" :src="datas.bgImg" alt="" v-if="datas.bgImg" />
           <div class="shop-head-pic-btn" style="text-align: center">
@@ -79,6 +135,16 @@
             <el-button type="primary" @click="clear()">清空图片</el-button>
           </div>
         </div>
+      </el-form-item>
+
+      <!-- #15 背景填充方式 -->
+      <el-form-item v-if="datas.bgImg && !datas.gradientBg" label="填充方式" class="lef">
+        <el-radio-group v-model="datas.bgSize">
+          <el-radio label="auto">铺满</el-radio>
+          <el-radio label="contain">包含</el-radio>
+          <el-radio label="cover">覆盖</el-radio>
+          <el-radio label="repeat">平铺</el-radio>
+        </el-radio-group>
       </el-form-item>
     </el-form>
 

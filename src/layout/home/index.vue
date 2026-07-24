@@ -18,6 +18,9 @@
         <el-button @click="catJson">查看JSON </el-button>
         <el-button @click="$refs.file.click()">导入JSON </el-button>
         <el-button @click="exportJSON">导出JSON </el-button>
+        <!-- #16 导出静态HTML和PNG -->
+        <el-button @click="exportHTML" type="success">导出HTML </el-button>
+        <el-button @click="exportPNG" type="warning">导出PNG </el-button>
         <input
           type="file"
           ref="file"
@@ -45,10 +48,7 @@
           <!-- 主体内容 -->
           <section
             class="phone-container"
-            :style="{
-              'background-color': pageSetup.bgColor,
-              backgroundImage: 'url(' + pageSetup.bgImg + ')',
-            }"
+            :style="containerStyle"
             @drop="drop($event)"
             @dragover="allowDrop($event)"
             @dragleave="dragleaves($event)"
@@ -153,7 +153,7 @@
 import utils from 'utils/index' // 方法类
 import componentProperties from '@/utils/componentProperties' // 组件数据
 import FileSaver from 'file-saver' // 导出JSON
-import { reactive, watch, toRefs, inject } from 'vue'
+import { reactive, watch, toRefs, inject, computed } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import vuedraggable from 'vuedraggable' //拖拽组件
 
@@ -172,6 +172,14 @@ const datas = reactive({
     titleHeight: 35, // 高度
     bgColor: 'rgba(249, 249, 249, 10)', //背景颜色
     bgImg: '', // 背景图片
+    // #15 新增页面设置
+    gradientBg: false, // 渐变背景开关
+    gradientStart: '#155bd4', // 渐变起色
+    gradientEnd: '#07c160', // 渐变止色
+    gradientAngle: 180, // 渐变角度
+    bgSize: 'auto', // 背景填充方式 auto/contain/cover/repeat
+    titleColor: '#333333', // 标题字色
+    outerMargin: 0, // 外边距(px)
   },
   pageComponents: [], //页面组件
 })
@@ -216,18 +224,118 @@ const exportJSON = () => {
 // 导入json
 const importJSON = () => {
   const file = document.getElementById('file').files[0]
+  if (!file) return
+  // #16 文件格式校验
+  if (!file.name.endsWith('.json')) {
+    ElMessage.warning('请选择 .json 文件')
+    return
+  }
   const reader = new FileReader()
   reader.readAsText(file)
   let _this = datas
   reader.onload = function () {
-    // this.result为读取到的json字符串，需转成json对象
-    let ImportJSON = JSON.parse(this.result)
-    // 检测是否导入成功
-    console.log(ImportJSON, '-----------------导入成功')
-    // 导入JSON数据
-    _this.id = ImportJSON.id
-    _this.pageSetup = JSON.parse(ImportJSON.templateJson)
-    _this.pageComponents = JSON.parse(ImportJSON.component)
+    try {
+      let ImportJSON = JSON.parse(this.result)
+      // #16 字段迁移：兼容旧版本数据，补全新字段
+      const defaultSetup = {
+        gradientBg: false,
+        gradientStart: '#155bd4',
+        gradientEnd: '#07c160',
+        gradientAngle: 180,
+        bgSize: 'auto',
+        titleColor: '#333333',
+        outerMargin: 0,
+      }
+      const importedSetup =
+        typeof ImportJSON.templateJson === 'string'
+          ? JSON.parse(ImportJSON.templateJson)
+          : ImportJSON.templateJson
+      const importedComponents =
+        typeof ImportJSON.component === 'string'
+          ? JSON.parse(ImportJSON.component)
+          : ImportJSON.component
+      // 合并缺失字段
+      _this.pageSetup = { ...defaultSetup, ...importedSetup }
+      // 组件数据迁移：为每个组件补全新字段
+      _this.pageComponents = (importedComponents || []).map((comp) => {
+        const def = componentProperties.get(comp.component)
+        if (def && def.setStyle) {
+          comp.setStyle = utils.assiginObj(
+            JSON.parse(JSON.stringify(def.setStyle)),
+            comp.setStyle || {}
+          )
+        }
+        return comp
+      })
+      _this.id = ImportJSON.id
+      ElMessage.success('导入成功（已自动迁移字段）')
+    } catch (e) {
+      ElMessage.error('导入失败：JSON格式错误')
+    }
+  }
+}
+
+// #15 容器样式（渐变背景 + 背景填充方式 + 外边距）
+const containerStyle = computed(() => {
+  const ps = datas.pageSetup
+  const style = {
+    'background-color': ps.bgColor,
+    padding: (ps.outerMargin || 0) + 'px',
+    'box-sizing': 'border-box',
+  }
+  if (ps.gradientBg) {
+    style.backgroundImage = `linear-gradient(${ps.gradientAngle || 180}deg, ${ps.gradientStart}, ${ps.gradientEnd})`
+  } else if (ps.bgImg) {
+    style.backgroundImage = 'url(' + ps.bgImg + ')'
+    style.backgroundRepeat = ps.bgSize === 'repeat' ? 'repeat' : 'no-repeat'
+    if (ps.bgSize === 'cover') style.backgroundSize = 'cover'
+    else if (ps.bgSize === 'contain') style.backgroundSize = 'contain'
+    else style.backgroundSize = '100% 100%'
+  }
+  return style
+})
+
+// #16 导出静态HTML
+const exportHTML = () => {
+  const phoneEl = document.querySelector('.phoneAll') || document.getElementById('imageTofile')
+  if (!phoneEl) return
+  // 克隆节点并内联关键样式
+  const clone = phoneEl.cloneNode(true)
+  const html = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>${datas.pageSetup.name}</title>
+<style>
+body{margin:0;padding:20px;background:#f5f5f5;font-family:-apple-system,BlinkMacSystemFont,sans-serif;}
+.phoneAll{max-width:375px;margin:0 auto;background:#fff;box-shadow:0 0 20px rgba(0,0,0,0.1);}
+img{max-width:100%;}
+</style>
+</head>
+<body>${clone.outerHTML}</body>
+</html>`
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+  FileSaver.saveAs(blob, `${datas.pageSetup.name}.html`)
+}
+
+// #16 导出PNG长图（使用html2canvas）
+const exportPNG = async () => {
+  const phoneEl = document.getElementById('imageTofile')
+  if (!phoneEl) return
+  try {
+    const html2canvas = (await import('html2canvas')).default
+    const canvas = await html2canvas(phoneEl, {
+      useCORS: true,
+      scale: 2,
+      backgroundColor: '#ffffff',
+      logging: false,
+    })
+    canvas.toBlob((blob) => {
+      if (blob) FileSaver.saveAs(blob, `${datas.pageSetup.name}.png`)
+    })
+  } catch (e) {
+    ElMessage.error('导出PNG失败，请刷新重试')
   }
 }
 

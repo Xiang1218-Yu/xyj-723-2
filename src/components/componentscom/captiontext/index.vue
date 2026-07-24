@@ -8,23 +8,33 @@
           : '1px solid #fff',
       }"
     >
-      <!-- 标题 -->
-      <h2
+      <!-- #7 标题行：左侧图标 + 小标题(渐变) -->
+      <div
+        class="title-row"
         :style="{
-          'font-size': datas.wordSize + 'px',
-          'font-weight': datas.wordWeight,
-          color: datas.wordColor,
-          'text-align': datas.positions,
-          height: datas.wordHeight + 'px',
-          'line-height': datas.wordHeight + 'px',
-          'padding-right': !(datas.positions !== 'center' && datas.more.show)
-            ? '0'
-            : '60px',
+          'padding-right':
+            datas.positions !== 'center' && datas.more.show ? '60px' : '0',
         }"
-        v-if="datas.name"
       >
-        {{ datas.name }}
-      </h2>
+        <!-- #7 左侧图标 -->
+        <img
+          v-if="datas.leftIcon"
+          class="left-icon"
+          :src="datas.leftIcon"
+          :style="{
+            width: datas.leftIconSize + 'px',
+            height: datas.leftIconSize + 'px',
+          }"
+          alt=""
+        />
+        <!-- #7 小标题（支持渐变） -->
+        <h2
+          v-if="datas.name"
+          :style="titleStyle"
+        >
+          {{ datas.name }}
+        </h2>
+      </div>
 
       <!-- 描述文字 -->
       <p
@@ -66,6 +76,27 @@ export default {
   props: {
     datas: Object,
   },
+  computed: {
+    // #7 标题样式，支持渐变
+    titleStyle() {
+      const base = {
+        'font-size': this.datas.wordSize + 'px',
+        'font-weight': this.datas.wordWeight,
+        color: this.datas.wordColor,
+        'text-align': this.datas.positions,
+        height: this.datas.wordHeight + 'px',
+        'line-height': this.datas.wordHeight + 'px',
+        margin: 0,
+      }
+      if (this.datas.gradientTitle) {
+        base.background = `linear-gradient(90deg, ${this.datas.gradientStart}, ${this.datas.gradientEnd})`
+        base['-webkit-background-clip'] = 'text'
+        base['-webkit-text-fill-color'] = 'transparent'
+        base.color = 'transparent'
+      }
+      return base
+    },
+  },
 }
 </script>
 
@@ -82,6 +113,17 @@ export default {
   p {
     word-wrap: break-word;
     min-height: 10px;
+  }
+
+  /* #7 标题行 */
+  .title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .left-icon {
+    display: block;
+    flex-shrink: 0;
   }
 
   /* 更多 */

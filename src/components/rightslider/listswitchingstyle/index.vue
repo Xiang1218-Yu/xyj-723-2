@@ -353,9 +353,42 @@
         <el-input
           v-show="datas.purchasebuttonType > 3"
           style="width: 40%; margin-top: 10px"
-          v-model="datas.purchase"
+          v-model="datas.buttonText"
+          placeholder="按钮文案"
+          maxlength="6"
         />
       </el-radio-group>
+
+      <div style="height: 10px" />
+
+      <!-- #4 按钮背景色 -->
+      <el-form-item class="lef" label="按钮颜色" v-show="datas.purchasebutton">
+        <el-color-picker
+          v-model="datas.buttonBgColor"
+          class="picke"
+          :predefine="predefineColors"
+        />
+      </el-form-item>
+
+      <!-- #4 按钮文字色 -->
+      <el-form-item class="lef" label="文字颜色" v-show="datas.purchasebutton">
+        <el-color-picker
+          v-model="datas.buttonTextColor"
+          class="picke"
+          :predefine="predefineColors"
+        />
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- #4 卡片阴影 -->
+      <el-form-item class="lef" label="卡片阴影">
+        {{ datas.boxShadow ? '显示' : '隐藏' }}
+        <el-checkbox
+          style="margin-left: 196px"
+          v-model="datas.boxShadow"
+        />
+      </el-form-item>
 
       <div style="height: 10px" />
 

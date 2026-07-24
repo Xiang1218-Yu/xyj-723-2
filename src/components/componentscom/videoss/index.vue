@@ -9,9 +9,12 @@
     <section v-else style="position: relative">
       <video
         :src="datas.src"
-        controls
+        :controls="datas.showControls"
         :autoplay="datas.autoplay"
         :poster="datas.coverUrl"
+        :loop="datas.loop"
+        :muted="datas.muted"
+        :style="{ objectFit: datas.objectFit || 'contain' }"
       ></video>
     </section>
 
@@ -25,12 +28,6 @@ export default {
   name: 'videoss',
   props: {
     datas: Object,
-  },
-
-  created() {
-  },
-
-  methods: {
   },
 }
 </script>
@@ -49,18 +46,9 @@ export default {
     align-items: center;
   }
 
-  /* 播放图标 */
-  .bof {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 100px;
-    opacity: 0.5;
-    color: #999;
-  }
-  video{
+  video {
     width: 100%;
+    display: block;
   }
 }
 </style>
