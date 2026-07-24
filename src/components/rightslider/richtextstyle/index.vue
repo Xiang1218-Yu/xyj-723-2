@@ -86,8 +86,6 @@ import 'tinymce/plugins/table'
 import 'tinymce/plugins/wordcount'
 import 'tinymce/plugins/toc'
 import 'tinymce/plugins/charmap'
-import 'tinymce/plugins/textcolor'
-import 'tinymce/plugins/lineheight'
 
 export default {
   name: 'richtextstyle',
@@ -180,8 +178,6 @@ export default {
           'preview',
           'print',
           'save',
-          'textcolor',
-          'lineheight',
         ],
         image_advtab: true,
         content_style: '',
