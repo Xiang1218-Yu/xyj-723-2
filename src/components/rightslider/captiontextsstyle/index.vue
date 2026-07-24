@@ -28,6 +28,77 @@
 
       <div style="height: 10px" />
 
+      <!-- F7 新增：左侧图标（可填 iconfont 类名，或点击上传图片得到链接，最长 100 字符） -->
+      <el-form-item label="左侧图标">
+        <el-input
+          v-model="datas.leftIcon"
+          placeholder="填 iconfont 类名或图片链接"
+          maxlength="100"
+          show-word-limit
+          @blur="checkLeftIcon"
+        />
+        <!-- 上传图片作为左侧图标 -->
+        <el-button
+          @click="$refs.iconUpload.showUpload()"
+          type="primary"
+          plain
+          size="small"
+          style="margin-top: 8px"
+        >
+          上传图片图标
+        </el-button>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- F7 新增：描述渐变文字开关 -->
+      <el-form-item label="描述渐变" class="wid">
+        {{ datas.descGradient ? '开启' : '关闭' }}
+        <el-checkbox v-model="datas.descGradient" />
+      </el-form-item>
+
+      <!-- F7 新增：渐变相关配置，仅在开启渐变时显示 -->
+      <div v-show="datas.descGradient">
+        <div style="height: 10px" />
+
+        <!-- 渐变起始色 -->
+        <el-form-item label="渐变起始">
+          <el-color-picker
+            v-model="datas.descGradientStart"
+            show-alpha
+            class="picke"
+            :predefine="predefineColors"
+          />
+        </el-form-item>
+
+        <div style="height: 10px" />
+
+        <!-- 渐变结束色 -->
+        <el-form-item label="渐变结束">
+          <el-color-picker
+            v-model="datas.descGradientEnd"
+            show-alpha
+            class="picke"
+            :predefine="predefineColors"
+          />
+        </el-form-item>
+
+        <div style="height: 10px" />
+
+        <!-- 渐变角度(0-360) -->
+        <el-form-item label="渐变角度" class="lef">
+          <el-slider
+            v-model="datas.descGradientAngle"
+            :max="360"
+            :min="0"
+            input-size="small"
+            show-input
+          />
+        </el-form-item>
+      </div>
+
+      <div style="height: 10px" />
+
       <!-- 显示位置 -->
       <el-form-item label="显示位置">
         <div class="weiz">
@@ -224,12 +295,19 @@
         </el-form-item>
       </div>
     </el-form>
+
+    <!-- F7 新增：上传图片作为左侧图标 -->
+    <uploadimg ref="iconUpload" @uploadInformation="uploadIcon" />
   </section>
 </template>
 
 <script>
+import uploadimg from '../../uploadImg' //图片上传
+import { ElMessage } from 'element-plus' // 消息提示
+
 export default {
   name: 'captiontextsstyle',
+  components: { uploadimg },
   props: {
     datas: Object,
   },
@@ -275,7 +353,19 @@ export default {
       ],
     }
   },
-  methods: {},
+  methods: {
+    // F7 新增：上传图片后写入左侧图标（图片链接形式）
+    uploadIcon(res) {
+      this.datas.leftIcon = res
+    },
+    // F7 新增：左侧图标长度校验(<=100)
+    checkLeftIcon() {
+      if (this.datas.leftIcon && this.datas.leftIcon.length > 100) {
+        ElMessage.warning('左侧图标内容不能超过 100 个字符')
+        this.datas.leftIcon = this.datas.leftIcon.slice(0, 100)
+      }
+    },
+  },
 }
 </script>
 

@@ -6,9 +6,83 @@
       <p v-show="datas.viewMore1">查看更多 <van-icon name="arrow" /></p>
     </div>
 
-    <!-- 没有视频展示默认 -->
+    <!-- F14 新增：按 articleList 渲染的文章卡片预览（有数据时显示，与原 imageList 渲染并存） -->
     <section
-      v-show="!datas.imageList[0]"
+      class="articlePreview"
+      v-if="datas.articleList && datas.articleList.length"
+    >
+      <div
+        class="articleCard"
+        v-for="(item, index) in datas.articleList"
+        :key="index"
+        :style="{ 'border-radius': datas.borderRadius + 'px' }"
+      >
+        <!-- 多图：1 图大图，多图九宫格/横排 -->
+        <div
+          class="articleImgs"
+          v-if="item.images && item.images.length"
+          :class="[item.images.length === 1 ? 'single' : 'grid']"
+        >
+          <div
+            class="articleImgItem"
+            v-for="(img, imgIdx) in item.images"
+            :key="imgIdx"
+          >
+            <img
+              draggable="false"
+              :src="img"
+              alt=""
+              :style="{ 'border-radius': datas.borderRadius + 'px' }"
+            />
+          </div>
+        </div>
+
+        <!-- 标题（应用文本粗细） -->
+        <h5 class="articleTitle" :style="{ 'font-weight': datas.textWeight }">
+          {{ item.title }}
+        </h5>
+
+        <!-- 标签（小圆角标签） -->
+        <div class="articleLabels" v-if="item.labels && item.labels.length">
+          <span
+            class="articleLabel"
+            v-for="(label, labelIdx) in item.labels"
+            :key="labelIdx"
+          >
+            {{ label }}
+          </span>
+        </div>
+
+        <!-- 底部：作者 + 阅读数/点赞数 -->
+        <div class="articleFooter">
+          <!-- 作者（authorEditable 为真时显示） -->
+          <div class="articleAuthor" v-if="datas.authorEditable">
+            <img
+              v-if="item.authorAvatar"
+              :src="item.authorAvatar"
+              alt=""
+              draggable="false"
+            />
+            <span>{{ item.author }}</span>
+          </div>
+          <span v-else></span>
+          <!-- 阅读数/点赞数 -->
+          <div class="articleStat">
+            <span class="stat" v-if="datas.readingNumber"
+              >{{ item.readCount }} 阅读</span
+            >
+            <span class="stat" v-if="datas.praisePoints">
+              <van-icon name="good-job-o" /> {{ item.praiseCount }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 没有视频展示默认 -->
+    <!-- F14：与文章预览互斥——存在文章数据时不显示占位商品卡片，避免内容重叠 -->
+    <section
+      v-show="!datas.imageList[0] && !hasArticle"
       :class="[datas.commodityType === 2 ? 'defaultcommodityList2' : '']"
       class="defaultcommodity"
     >
@@ -154,6 +228,13 @@ export default {
     }
   },
 
+  computed: {
+    // F14：是否存在文章数据，用于与占位商品卡片互斥显示
+    hasArticle() {
+      return !!(this.datas.articleList && this.datas.articleList.length)
+    },
+  },
+
   created() {},
 
   methods: {},
@@ -163,6 +244,106 @@ export default {
 <style scoped lang="less">
 .storenotecard {
   position: relative;
+
+  /* F14 新增：文章卡片预览样式 */
+  .articlePreview {
+    padding: 0 15px;
+    box-sizing: border-box;
+    .articleCard {
+      margin-bottom: 15px;
+      padding: 10px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(93, 113, 127, 0.08);
+      overflow: hidden;
+      /* 多图容器 */
+      .articleImgs {
+        margin-bottom: 8px;
+        /* 单图大图 */
+        &.single {
+          .articleImgItem {
+            width: 100%;
+            img {
+              width: 100%;
+              display: block;
+            }
+          }
+        }
+        /* 多图九宫格 */
+        &.grid {
+          display: flex;
+          flex-wrap: wrap;
+          margin: -2px;
+          .articleImgItem {
+            width: calc(33.33% - 4px);
+            margin: 2px;
+            img {
+              width: 100%;
+              height: 90px;
+              object-fit: cover;
+              display: block;
+            }
+          }
+        }
+      }
+      /* 标题 */
+      .articleTitle {
+        font-size: 14px;
+        line-height: 20px;
+        margin: 0 0 8px;
+        color: #323233;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      /* 标签 */
+      .articleLabels {
+        display: flex;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+        .articleLabel {
+          font-size: 11px;
+          color: #155bd4;
+          background: #e0edff;
+          border-radius: 4px;
+          padding: 2px 6px;
+          margin: 2px 6px 2px 0;
+        }
+      }
+      /* 底部作者 + 数据 */
+      .articleFooter {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        .articleAuthor {
+          display: flex;
+          align-items: center;
+          font-size: 12px;
+          color: #646566;
+          img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 6px;
+          }
+        }
+        .articleStat {
+          display: flex;
+          align-items: center;
+          .stat {
+            font-size: 12px;
+            color: #969799;
+            display: flex;
+            align-items: center;
+            margin-left: 12px;
+            .van-icon-good-job-o {
+              margin-right: 4px;
+            }
+          }
+        }
+      }
+    }
+  }
 
   /* 更多1 */
   .more1 {

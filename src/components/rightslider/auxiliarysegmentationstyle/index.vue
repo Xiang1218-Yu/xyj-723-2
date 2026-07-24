@@ -45,29 +45,9 @@
       <div style="height: 20px" />
 
       <!-- 选择样式 -->
-      <el-form-item
-        v-show="datas.segmentationtype === 1"
-        class="lef"
-        label="选择样式"
-      >
-        <div class="weiz">
-          <el-tooltip
-            effect="dark"
-            :content="item.text"
-            placement="bottom"
-            v-for="(item, index) in borderType"
-            :key="index"
-          >
-            <i
-              class="iconfont"
-              :class="[item.icon, datas.bordertp === item.type ? 'active' : '']"
-              @click="datas.bordertp = item.type"
-            />
-          </el-tooltip>
-        </div>
-      </el-form-item>
-
-      <div v-show="datas.segmentationtype === 1" style="height: 20px" />
+      <!-- F12修复：旧的线型选择器(bordertp: solid/dashed/dotted)与新的 lineStyle 系统重复，
+           渲染组件仅使用 lineStyle，故移除此旧选择器，统一由下方“线型样式”控制，避免配置不同步。
+           bordertp 字段保留但由 lineStyle 自动同步(见 watch)，以兼容可能读取旧字段的历史数据。 -->
 
       <!-- 左右边距 -->
       <el-form-item
@@ -114,11 +94,142 @@
         >
         </el-color-picker>
       </el-form-item>
+
+      <div v-show="datas.segmentationtype === 1" style="height: 20px" />
+
+      <!-- F12 新增：线型选择(实线/虚线/双线/渐变) -->
+      <el-form-item
+        v-show="datas.segmentationtype === 1"
+        class="lef"
+        label="线型样式"
+      >
+        <el-radio-group v-model="datas.lineStyle">
+          <el-radio label="solid">实线</el-radio>
+          <el-radio label="dashed">虚线</el-radio>
+          <el-radio label="double">双线</el-radio>
+          <el-radio label="gradient">渐变</el-radio>
+        </el-radio-group>
+      </el-form-item>
+
+      <div
+        v-show="datas.segmentationtype === 1 && datas.lineStyle === 'gradient'"
+        style="height: 20px"
+      />
+
+      <!-- F12 新增：渐变起止色(仅 gradient 时显示) -->
+      <el-form-item
+        v-show="datas.segmentationtype === 1 && datas.lineStyle === 'gradient'"
+        class="lef aa"
+        label="渐变颜色"
+      >
+        <div class="gradient-colors">
+          <el-color-picker
+            v-model="datas.gradientStart"
+            show-alpha
+            :predefine="predefineColors"
+          />
+          <span class="gradient-arrow">→</span>
+          <el-color-picker
+            v-model="datas.gradientEnd"
+            show-alpha
+            :predefine="predefineColors"
+          />
+        </div>
+      </el-form-item>
+
+      <div v-show="datas.segmentationtype === 1" style="height: 20px" />
+
+      <!-- F12 新增：左右缩进(0-50) -->
+      <el-form-item
+        v-show="datas.segmentationtype === 1"
+        class="lef"
+        label="左右缩进"
+      >
+        <el-slider
+          v-model="datas.indent"
+          :max="50"
+          :min="0"
+          input-size="small"
+          show-input
+          @change="checkIndent"
+        >
+        </el-slider>
+      </el-form-item>
+
+      <div v-show="datas.segmentationtype === 1" style="height: 20px" />
+
+      <!-- F12 新增：显示中间文字开关 -->
+      <el-form-item
+        v-show="datas.segmentationtype === 1"
+        class="lef"
+        label="中间文字"
+      >
+        <el-checkbox v-model="datas.showText">显示中间文字</el-checkbox>
+      </el-form-item>
+
+      <div
+        v-show="datas.segmentationtype === 1 && datas.showText"
+        style="height: 20px"
+      />
+
+      <!-- F12 新增：文字内容(最长 20) -->
+      <el-form-item
+        v-show="datas.segmentationtype === 1 && datas.showText"
+        class="lef"
+        label="文字内容"
+      >
+        <el-input
+          v-model="datas.lineText"
+          maxlength="20"
+          show-word-limit
+          placeholder="请输入文字（最长20字）"
+          @input="checkLineText"
+        />
+      </el-form-item>
+
+      <div
+        v-show="datas.segmentationtype === 1 && datas.showText"
+        style="height: 20px"
+      />
+
+      <!-- F12 新增：前导图标(iconfont 类名) -->
+      <el-form-item
+        v-show="datas.segmentationtype === 1 && datas.showText"
+        class="lef"
+        label="文字图标"
+      >
+        <el-input
+          v-model="datas.textIcon"
+          placeholder="请输入 iconfont 类名，如 icon-xxx"
+        />
+      </el-form-item>
+
+      <div
+        v-show="datas.segmentationtype === 1 && datas.showText"
+        style="height: 20px"
+      />
+
+      <!-- F12 新增：文字颜色 -->
+      <el-form-item
+        v-show="datas.segmentationtype === 1 && datas.showText"
+        class="lef aa"
+        label="文字颜色"
+      >
+        <el-color-picker
+          v-model="datas.textColor"
+          show-alpha
+          class="picke"
+          :predefine="predefineColors"
+        >
+        </el-color-picker>
+      </el-form-item>
     </el-form>
   </div>
 </template>
 
 <script>
+import { ElMessage } from 'element-plus' //校验提示
+
 export default {
   name: 'auxiliarysegmentationstyle',
   props: {
@@ -146,25 +257,34 @@ export default {
         'hsla(209, 100%, 56%, 0.73)',
         '#c7158577',
       ],
-      borderType: [
-        //线类型
-        {
-          icon: 'icon-icon_fengexian_shixian',
-          text: '实线',
-          type: 'solid',
-        },
-        {
-          icon: 'icon-xuxian',
-          text: '虚线',
-          type: 'dashed',
-        },
-        {
-          icon: 'icon-dianxian--',
-          text: '点线',
-          type: 'dotted',
-        },
-      ],
     }
+  },
+  // F12修复：lineStyle 为权威线型字段；同步写回旧字段 bordertp，
+  // 使读取旧字段的历史逻辑/数据保持一致(gradient/double 无对应旧值时回退 solid)
+  watch: {
+    'datas.lineStyle': {
+      immediate: true,
+      handler(val) {
+        // 旧字段仅支持 solid/dashed/dotted，新线型 double/gradient 统一映射为 solid
+        this.datas.bordertp = val === 'dashed' ? 'dashed' : 'solid'
+      },
+    },
+  },
+  methods: {
+    // F12：左右缩进范围校验(0-50)，越界纠正并提示
+    checkIndent(val) {
+      if (val < 0 || val > 50) {
+        this.datas.indent = Math.min(Math.max(Number(val) || 0, 0), 50)
+        ElMessage.warning('左右缩进需在 0-50 之间，已自动纠正')
+      }
+    },
+    // F12：文字长度校验(<=20)，超出截断并提示
+    checkLineText(val) {
+      if (val && val.length > 20) {
+        this.datas.lineText = val.slice(0, 20)
+        ElMessage.warning('中间文字最长 20 个字符，已自动截断')
+      }
+    },
   },
 }
 </script>
@@ -200,6 +320,17 @@ export default {
   /* 颜色选择器 */
   .picke {
     float: right;
+  }
+
+  /* F12：渐变颜色选择区 */
+  .gradient-colors {
+    display: flex;
+    align-items: center;
+    float: right;
+    .gradient-arrow {
+      margin: 0 8px;
+      color: #969799;
+    }
   }
 
   /* 图片样式 */

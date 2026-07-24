@@ -7,7 +7,7 @@
   >
     <!-- 左半部分 -->
     <div class="lef" v-show="pageSetup.isBack">
-      <van-icon name="arrow-left" />
+      <van-icon name="arrow-left" :style="{ color: pageSetup.titleColor }" />
     </div>
     <!-- 标题 -->
     <div
@@ -15,13 +15,14 @@
       :style="{
         height: pageSetup.titleHeight + 'px',
         'line-height': pageSetup.titleHeight + 'px',
+        color: pageSetup.titleColor,
       }"
     >
       {{ pageSetup.name }}
     </div>
     <!-- 右半部分 -->
     <div class="rig" v-show="pageSetup.isPerson">
-      <span>个人中心</span>
+      <span :style="{ color: pageSetup.titleColor }">个人中心</span>
     </div>
   </div>
 </template>

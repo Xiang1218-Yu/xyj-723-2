@@ -65,6 +65,54 @@
         </el-color-picker>
       </el-form-item>
 
+      <!-- F15 新增：背景类型选择 -->
+      <el-form-item label="背景类型" class="lef">
+        <el-radio-group v-model="datas.bgType">
+          <el-radio label="color">纯色</el-radio>
+          <el-radio label="gradient">渐变</el-radio>
+          <el-radio label="image">图片</el-radio>
+        </el-radio-group>
+      </el-form-item>
+
+      <!-- F15 新增：渐变背景配置(仅渐变类型显示) -->
+      <template v-if="datas.bgType === 'gradient'">
+        <el-form-item label="渐变起始色" class="lef">
+          <el-color-picker
+            v-model="datas.gradientStart"
+            show-alpha
+            :predefine="predefineColors"
+          />
+        </el-form-item>
+        <el-form-item label="渐变结束色" class="lef">
+          <el-color-picker
+            v-model="datas.gradientEnd"
+            show-alpha
+            :predefine="predefineColors"
+          />
+        </el-form-item>
+        <el-form-item label="渐变角度" class="lef-height">
+          <el-slider
+            v-model="datas.gradientAngle"
+            :max="360"
+            :min="0"
+            input-size="small"
+            show-input
+          />
+        </el-form-item>
+      </template>
+
+      <!-- F15 新增：图片铺贴方式(仅图片类型显示) -->
+      <el-form-item
+        label="铺贴方式"
+        class="lef"
+        v-if="datas.bgType === 'image'"
+      >
+        <el-radio-group v-model="datas.bgRepeat">
+          <el-radio label="cover">覆盖</el-radio>
+          <el-radio label="repeat">平铺</el-radio>
+        </el-radio-group>
+      </el-form-item>
+
       <el-form-item label="背景图片">
         <div class="shop-head-pic" style="text-align: center">
           <img class="home-bg" :src="datas.bgImg" alt="" v-if="datas.bgImg" />
@@ -79,6 +127,25 @@
             <el-button type="primary" @click="clear()">清空图片</el-button>
           </div>
         </div>
+      </el-form-item>
+
+      <!-- F15 新增：标题栏文字颜色 -->
+      <el-form-item label="标题栏字色" class="lef">
+        <el-color-picker
+          v-model="datas.titleColor"
+          :predefine="predefineColors"
+        />
+      </el-form-item>
+
+      <!-- F15 新增：页面外边距 -->
+      <el-form-item label="页面外边距" class="lef-height">
+        <el-slider
+          v-model="datas.pageMargin"
+          :max="30"
+          :min="0"
+          input-size="small"
+          show-input
+        />
       </el-form-item>
     </el-form>
 

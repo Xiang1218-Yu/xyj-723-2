@@ -213,6 +213,62 @@
           show-input
         ></el-slider>
       </el-form-item>
+
+      <!-- 下划线 -->
+      <div class="bor"></div>
+
+      <!-- 过渡效果 -->
+      <el-form-item label="过渡效果" class="lef">
+        <el-select
+          v-model="datas.effect"
+          placeholder="请选择过渡效果"
+          style="width: 100%"
+        >
+          <el-option label="滑动 slide" value="slide"></el-option>
+          <el-option label="淡入淡出 fade" value="fade"></el-option>
+          <el-option label="方块 cube" value="cube"></el-option>
+          <el-option label="3D coverflow" value="coverflow"></el-option>
+          <el-option label="翻转 flip" value="flip"></el-option>
+        </el-select>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- 自动播放开关 -->
+      <el-form-item class="lef" label="自动播放">
+        {{ datas.autoplay ? '是' : '否' }}
+        <el-checkbox style="margin-left: 210px" v-model="datas.autoplay" />
+      </el-form-item>
+
+      <!-- 自动播放间隔（500-10000ms，做范围校验） -->
+      <el-form-item
+        class="lef"
+        label="播放间隔"
+        v-show="datas.autoplay"
+      >
+        <el-input-number
+          v-model="datas.autoplayDelay"
+          :min="500"
+          :max="10000"
+          :step="500"
+          size="small"
+          @change="checkAutoplayDelay"
+        ></el-input-number>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- 循环播放开关 -->
+      <el-form-item class="lef" label="循环播放">
+        {{ datas.loop ? '是' : '否' }}
+        <el-checkbox style="margin-left: 210px" v-model="datas.loop" />
+      </el-form-item>
+
+      <!-- 显示左右箭头开关 -->
+      <el-form-item class="lef" label="显示箭头">
+        {{ datas.showArrow ? '是' : '否' }}
+        <el-checkbox style="margin-left: 210px" v-model="datas.showArrow" />
+      </el-form-item>
     </el-form>
 
     <!-- 上传图片 -->
@@ -223,6 +279,7 @@
 <script>
 import vuedraggable from 'vuedraggable' //拖拽组件
 import uploadimg from '../../uploadImg' //图片上传
+import { ElMessage } from 'element-plus' // 消息提示
 
 export default {
   name: 'pictureadsstyle',
@@ -261,6 +318,19 @@ export default {
     /* 删除图片 */
     deleteimg(index) {
       this.datas.imageList.splice(index, 1)
+    },
+
+    /* 自动播放间隔数值范围校验（500-10000ms），越界时提示并纠正 */
+    checkAutoplayDelay(val) {
+      // el-input-number 清空时可能为 null，兜底为最小值
+      let value = Number(val)
+      if (isNaN(value) || value < 500) {
+        ElMessage.warning('自动播放间隔不能小于 500ms，已自动纠正为 500ms')
+        this.datas.autoplayDelay = 500
+      } else if (value > 10000) {
+        ElMessage.warning('自动播放间隔不能大于 10000ms，已自动纠正为 10000ms')
+        this.datas.autoplayDelay = 10000
+      }
     },
   },
 

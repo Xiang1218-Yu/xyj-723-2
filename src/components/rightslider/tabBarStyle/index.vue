@@ -34,7 +34,7 @@
       <el-form-item class="lef" label="高亮位置">
         <el-slider
           v-model="datas.Highlight"
-          :max="4"
+          :max="datas.iconList.length ? datas.iconList.length - 1 : 4"
           :min="0"
           input-size="small"
           show-input
@@ -42,7 +42,12 @@
         </el-slider>
       </el-form-item>
 
-      <el-form-item class="lef" label="导航"> </el-form-item>
+      <el-form-item class="lef" label="导航">
+        <span style="color: #969799; font-size: 12px"
+          >鼠标拖拽调整导航顺序</span
+        >
+      </el-form-item>
+      <!-- F5 改造：按新结构 {text,icon,activeIcon,badge,linktype,http} 编辑导航 -->
       <vuedraggable
         :list="datas.iconList"
         item-key="index"
@@ -56,7 +61,7 @@
               name="close"
               @click="deleteimg(index)"
             />
-            <!-- 图片 -->
+            <!-- 图标区：未选中图标 + 选中态图标，可上传图片或输入图标名 -->
             <div>
               <div
                 class="imagBox"
@@ -64,44 +69,70 @@
                 :key="replaceIconIndex"
                 @click="replaceIcon(replaceIconIndex, index)"
               >
+                <!-- 图片类型展示图片，否则展示图标名文字 -->
                 <img
+                  v-if="isImg(replaceIconIndex == 1 ? element.icon : element.activeIcon)"
                   class="imag"
-                  :src="
-                    replaceIconIndex == 1 ? element.iconPic : element.inactive
-                  "
+                  :src="replaceIconIndex == 1 ? element.icon : element.activeIcon"
                   draggable="false"
                 />
+                <div class="imag icon-placeholder" v-else>
+                  {{ (replaceIconIndex == 1 ? element.icon : element.activeIcon) || '图标' }}
+                </div>
                 <div>
-                  {{ replaceIconIndex == 1 ? '选中时' : '未选中时' }}
+                  {{ replaceIconIndex == 1 ? '未选中' : '选中时' }}
                 </div>
               </div>
             </div>
-            <!-- 标题和链接 -->
+            <!-- 文本/徽标/图标名/链接 -->
             <div class="imgText">
               <div class="imgText-top">
-                <el-input v-model="element.iconText" placeholder="导航名称" />
-                <div class="imgText-top-r">
-                  <span>小圆点</span>
-                  <el-checkbox v-model="element.isDot"></el-checkbox>
-                </div>
+                <!-- text 最长 6 -->
+                <el-input
+                  v-model="element.text"
+                  maxlength="6"
+                  show-word-limit
+                  placeholder="导航名称"
+                />
               </div>
-              <!-- 标题和链接 -->
+              <!-- 徽标文本 最长 4 -->
+              <div class="imgText-row">
+                <span class="row-label">徽标</span>
+                <el-input
+                  v-model="element.badge"
+                  maxlength="4"
+                  placeholder="徽标文本，空则不显示"
+                />
+              </div>
+              <!-- 图标名（iconfont/vant 图标类名，点击上方图标框可改为上传图片） -->
+              <div class="imgText-row">
+                <span class="row-label">图标名</span>
+                <el-input
+                  v-model="element.icon"
+                  placeholder="vant 图标名，或点上方框上传图片"
+                />
+              </div>
+              <div class="imgText-row">
+                <span class="row-label">选中图标</span>
+                <el-input
+                  v-model="element.activeIcon"
+                  placeholder="选中态图标名，可留空"
+                />
+              </div>
+              <!-- 跳转类型与链接 -->
               <div class="imgTextChild">
-                <!-- 选择类型 -->
                 <el-select
                   v-model="element.linktype"
                   placeholder="请选择跳转类型"
                 >
                   <el-option
-                    v-for="element in optionsType"
-                    :key="element.name"
-                    :label="element.name"
-                    :value="element.type"
+                    v-for="opt in optionsType"
+                    :key="opt.name"
+                    :label="opt.name"
+                    :value="opt.type"
                   >
                   </el-option>
                 </el-select>
-
-                <!-- 输入链接 -->
                 <el-input
                   placeholder="请输入链接，输入前确保可以访问"
                   v-model="element.http.externalLink"
@@ -115,15 +146,14 @@
 
       <!-- 添加导航按钮 -->
       <el-button
-        @click="$refs.upload.showUpload()"
+        @click="addNav"
         class="uploadImg"
         type="primary"
         plain
-        v-if="datas.iconList.length < 5"
       >
         点击添加导航
       </el-button>
-      <i class="icon-tip">*最多添加5个</i>
+      <i class="icon-tip">*最少2个，最多5个</i>
     </el-form>
 
     <!-- 上传图片 -->
@@ -138,6 +168,7 @@
 <script>
 import uploadimg from '../../uploadImg' //图片上传
 import vuedraggable from 'vuedraggable' //拖拽组件
+import { ElMessage } from 'element-plus' // F5 新增：数量越界提示
 
 export default {
   name: 'tabBarStyle',
@@ -187,45 +218,64 @@ export default {
   mounted() {},
 
   methods: {
-    // 提交
+    // F5 新增：判断字符串是否为图片链接
+    isImg(str) {
+      if (!str) return false
+      return (
+        /^https?:\/\//.test(str) ||
+        /^data:image/.test(str) ||
+        /^\/\//.test(str) ||
+        /\.(png|jpe?g|gif|webp|svg)$/i.test(str)
+      )
+    },
+    // 上传图片回调：写入 icon(未选中) 或 activeIcon(选中)
     uploadInformation(res) {
       if (this.replaceIconIndex == 1) {
-        this.datas.iconList[this.replaceIndex].iconPic = res
+        this.datas.iconList[this.replaceIndex].icon = res
         this.replaceIconIndex = null
         return
       }
       if (this.replaceIconIndex == 2) {
-        this.datas.iconList[this.replaceIndex].inactive = res
+        this.datas.iconList[this.replaceIndex].activeIcon = res
         this.replaceIconIndex = null
         return
       }
-      this.datas.iconList.push({
-        /** 图标名称文字 */
-        iconText: '',
-        /** 图标图片 */
-        iconPic: res,
-        inactive: res,
-        /** 是否显示小圆点 */
-        isDot: false,
-        /** 跳转类型 */
-        linktype: '10',
-        /** 跳转参数 */
-        http: {},
-      })
     },
     /* 取消上传 */
     handleClose() {
       this.replaceIconIndex = null
     },
-    /* 删除图片 */
-    deleteimg(index) {
-      this.datas.iconList.splice(index, 1)
+    // F5 新增：添加导航（默认结构），最多 5 个
+    addNav() {
+      if (this.datas.iconList.length >= 5) {
+        ElMessage.warning('底部导航最多添加 5 个')
+        return
+      }
+      this.datas.iconList.push({
+        text: '导航',
+        icon: '',
+        activeIcon: '',
+        badge: '',
+        linktype: '10',
+        http: {},
+      })
     },
-    /* 点击图片 */
+    // F5 改造：删除导航，最少保留 2 个
+    deleteimg(index) {
+      if (this.datas.iconList.length <= 2) {
+        ElMessage.warning('底部导航最少保留 2 个')
+        return
+      }
+      this.datas.iconList.splice(index, 1)
+      // 高亮位置越界时回退
+      if (this.datas.Highlight > this.datas.iconList.length - 1) {
+        this.datas.Highlight = this.datas.iconList.length - 1
+      }
+    },
+    /* 点击图标框，1=未选中图标 2=选中态图标 */
     replaceIcon(replaceIconIndex, replaceIndex) {
       this.replaceIconIndex = replaceIconIndex
       this.replaceIndex = replaceIndex
-      console.log(replaceIconIndex, replaceIndex)
       this.$refs.upload.showUpload()
     },
   },
@@ -304,6 +354,18 @@ export default {
         width: 60px;
         height: 60px;
       }
+      /* F5 新增：非图片图标名占位展示 */
+      .icon-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: #969799;
+        background-color: #f7f8fa;
+        box-sizing: border-box;
+        padding: 2px;
+        word-break: break-all;
+      }
       div {
         position: absolute;
         top: 0;
@@ -319,17 +381,31 @@ export default {
 
     /* 图片字 */
     .imgText {
+      flex: 1;
       padding-left: 20px;
       display: flex;
       flex-direction: column;
       box-sizing: border-box;
       justify-content: space-around;
+      /* F5 新增：行式编辑项 */
+      .imgText-row {
+        display: flex;
+        align-items: center;
+        margin-top: 6px;
+        .row-label {
+          width: 56px;
+          flex-shrink: 0;
+          font-size: 12px;
+          color: #646566;
+        }
+      }
       /* 图片字 */
       .imgTextChild {
         width: 100%;
         display: flex;
         box-sizing: border-box;
         justify-content: space-between;
+        margin-top: 6px;
         .fir-sele.el-select {
           width: 40%;
         }
@@ -339,14 +415,6 @@ export default {
         flex-direction: row;
         justify-content: space-between;
         align-items: center;
-        .imgText-top-r {
-          width: 50%;
-          text-align: center;
-          font-size: 12px;
-          span {
-            margin-right: 10px;
-          }
-        }
         :deep(.el-input),
         .el-input--mini {
           flex: 1;

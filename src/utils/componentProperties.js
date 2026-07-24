@@ -1,7 +1,8 @@
 const componentProperties = new Map()
 
 // 数据版本  每次修改组件数据  需要对版本进行修改
-// componentProperties.set('componentPropertiesVersion', 'V1.0.0')
+// 本轮增量增强后版本升级为 V2.0.0，导入旧数据时按此版本做字段补全/迁移
+componentProperties.set('componentPropertiesVersion', 'V2.0.0')
 
 componentProperties.set('captiontext', {
   component: 'captiontext',
@@ -23,6 +24,13 @@ componentProperties.set('captiontext', {
     backColor: 'rgba(255, 255, 255, 10)', //背景颜色
     borderBott: false, //底部分割线
     wordHeight: 24,//框体高度
+    // F7 新增：左侧图标（iconfont 类名或图片链接，最长 100 字符）
+    leftIcon: '',
+    // F7 新增：小标题（描述）渐变开关及渐变色配置
+    descGradient: false, //描述是否使用渐变文字
+    descGradientStart: 'rgb(255, 106, 0)', //渐变起始色
+    descGradientEnd: 'rgb(238, 0, 255)', //渐变结束色
+    descGradientAngle: 90, //渐变角度(0-360)
     more: {    //查看更多
       show: false,//是否显示查看更多
       type: 1, // 样式选择
@@ -72,6 +80,15 @@ componentProperties.set('listswitching', {
     showMore: false,
     moreUrl: null,
     bgImg: '',
+    // F4 新增：Mock 商品编辑器相关配置
+    columns: 2, //列数(1-4)
+    cardShadow: false, //卡片是否显示阴影
+    buttonText: '马上抢', //按钮文案(最长 8 字符)
+    mockList: [
+      // Mock 商品数据，供右侧编辑器直接编辑
+      { title: '示例商品名称', price: '99.00', img: '' },
+      { title: '示例商品名称', price: '199.00', img: '' },
+    ],
   },
 })
 
@@ -90,6 +107,12 @@ componentProperties.set('pictureads', {
     pagingType: 0,  // 分页类型: 0/"bullets"/"fraction"/"progressbar"
     rowindividual: 2,// 一行个数
     imageList: [],  // 添加图片
+    // F3 新增：Swiper 增强配置
+    autoplay: true, //是否自动播放
+    autoplayDelay: 3000, //自动播放间隔(ms，500-10000)
+    effect: 'slide', //过渡效果: slide/fade/cube/coverflow/flip
+    showArrow: false, //是否显示左右箭头
+    loop: true, //是否循环播放
   },
 })
 
@@ -111,6 +134,9 @@ componentProperties.set('graphicnavigation', {
     textHeight: 24, // 字体高度
     textSize: 12, // 字体大小
     bgImg: '',
+    // F11 新增：大图卡片样式与图标形状、角标
+    cardStyle: false, //是否启用大图卡片样式
+    iconShape: 'square', //图标形状: square(方形)/circle(圆形)/round(圆角)
   },
 })
 
@@ -124,6 +150,12 @@ componentProperties.set('richtext', {
     text: '富文本',
     myValue: '', //富文本内容
     backColor: 'rgb(249, 249, 249)', //背景颜色
+    // F1 新增：全局文字大小/行高（作用于编辑器正文与预览区，独立于 TinyMCE 局部选中样式）
+    fontSize: 14, //整体文字大小(px)
+    lineHeight: 1.6, //整体行高(倍数)
+    // F1 新增：用户自定义行高列表，每项 { name: 显示名称, value: 行高倍数 }
+    // 保存后会同时出现在面板行高下拉与编辑器行高工具栏中（联动）
+    customLineHeights: [],
   },
 })
 componentProperties.set('magiccube', {
@@ -137,6 +169,9 @@ componentProperties.set('magiccube', {
     rubiksCubeType: 0, // 魔方类型
     pageMargin: 0, //页面间距
     imgMargin: 0, //图片间隙
+    // F9 新增：图片比例与圆角
+    borderRadius: 0, //图片圆角(px)
+    aspectRatio: '1:1', //图片比例: 1:1 / 4:3 / 16:9 / 3:4
     imageList: [
       {
         src: '',
@@ -179,6 +214,15 @@ componentProperties.set('auxiliarysegmentation', {
     paddType: 0, //边距
     auxliarColor: 'rgb(229, 229, 229)', //辅助线颜色
     bordertp: 'solid', //线的类型
+    // F12 新增：线型/渐变/文字图标/缩进
+    lineStyle: 'solid', //线型: solid(实线)/dashed(虚线)/double(双线)/gradient(渐变)
+    gradientStart: 'rgb(255, 106, 0)', //渐变起始色(lineStyle=gradient 时生效)
+    gradientEnd: 'rgb(238, 0, 255)', //渐变结束色
+    indent: 0, //左右缩进(px, 0-50)
+    showText: false, //是否显示中间文字
+    lineText: '', //中间文字内容(最长 20 字符)
+    textIcon: '', //文字前图标(iconfont 类名)
+    textColor: 'rgb(150, 151, 153)', //文字颜色
   },
 })
 componentProperties.set('commoditysearch', {
@@ -241,6 +285,12 @@ componentProperties.set('notice', {
     noticeText: '请填写内容，如果过长，将会在手机上滚动显示', //内容
     backColor: 'rgb(255, 248, 233)', //背景颜色
     textColor: 'rgba(100, 101, 102)', //文字颜色
+    // F6 新增：多条滚动/方向/速度/前导图标
+    noticeList: ['请填写公告内容一', '请填写公告内容二'], //多条公告，每条最长 50 字符
+    direction: 'horizontal', //滚动方向: horizontal(横向)/vertical(纵向)
+    speed: 40, //滚动速度(px/s 或秒，10-200)
+    leadingIcon: 'volume-o', //前导图标(vant 图标名)
+    showLeadingIcon: true, //是否显示前导图标
   },
 })
 componentProperties.set('videoss', {
@@ -254,6 +304,10 @@ componentProperties.set('videoss', {
     src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4', // 视频地址
     coverUrl:null, // 封面地址
     autoplay: false, // 是否自动播放
+    // F2 新增：循环/静音/控件开关
+    loop: false, // 是否循环播放
+    muted: false, // 是否静音
+    controls: true, // 是否显示控件
   },
 })
 
@@ -307,6 +361,20 @@ componentProperties.set('storenotecard', {
     positions: 'bottom', //标题位置
     linktype: '10',
     http: {},
+    // F14 新增：标签编辑/点赞阅读可填/多图与作者
+    articleList: [
+      // 文章数据，供右侧编辑器编辑
+      {
+        title: '示例文章标题',
+        labels: ['推荐'], //标签列表，每个最长 8 字符
+        readCount: 1234, //阅读数(数字)
+        praiseCount: 88, //点赞数(数字)
+        author: '作者名称', //作者(最长 12 字符)
+        authorAvatar: '', //作者头像
+        images: [], //多图列表(图片链接)
+      },
+    ],
+    authorEditable: true, //是否显示作者
   },
 })
 componentProperties.set('crowdoperation', {
@@ -349,6 +417,22 @@ componentProperties.set('investigate', {
     text: '表单模块',
     title: '表单模块',
     jsonData: [], //value1为sass显示内容，value2为前端显示内容
+    // F8 新增：字段增强/提交按钮样式
+    // fields 描述表单项，type 支持: input/textarea/date/switch/rate/radio
+    fields: [
+      {
+        label: '姓名', //字段标题(最长 20 字符)
+        type: 'input', //字段类型
+        required: true, //是否必填
+        placeholder: '请输入姓名',
+        options: [], //radio 类型的选项
+        value: '', //默认值
+      },
+    ],
+    submitText: '提交', //提交按钮文案(最长 10 字符)
+    submitBgColor: '#155bd4', //提交按钮背景色
+    submitTextColor: '#ffffff', //提交按钮文字颜色
+    submitRadius: 4, //提交按钮圆角(px)
   },
 })
 componentProperties.set('tabBar', {
@@ -366,7 +450,12 @@ componentProperties.set('tabBar', {
     iconHeight: '25',
     fontSize: '14',
     Highlight: 0,
-    iconList: [],
+    iconList: [
+      // F5 新增：默认给出可增删的 Tab 项，支持编辑图标与徽标
+      // badge 为徽标内容(空则不显示，可为数字或短文本，最长 4 字符)
+      { text: '首页', icon: '', activeIcon: '', badge: '', linktype: '10', http: {} },
+      { text: '我的', icon: '', activeIcon: '', badge: '', linktype: '10', http: {} },
+    ],
   },
 })
 componentProperties.set('follow', {
@@ -380,6 +469,19 @@ componentProperties.set('follow', {
     heade: 'https://imgs.starfirelink.com/miniShop//logo_1618466110849.png',
     followName: '公众号名称',
     followAppId: '',
+    // F13 新增：关注按钮切换/历史文章/简介
+    showFollowBtn: true, //是否显示关注按钮
+    followBtnText: '关注', //关注按钮文案(最长 6 字符)
+    followedBtnText: '已关注', //已关注文案
+    isFollowed: false, //预览态：是否已关注(用于按钮切换演示)
+    intro: '这里是公众号简介，介绍公众号的定位与内容。', //简介(最长 60 字符)
+    showIntro: true, //是否显示简介
+    showHistory: true, //是否显示历史文章
+    historyList: [
+      // 历史文章列表
+      { title: '示例历史文章一', cover: '', http: {} },
+      { title: '示例历史文章二', cover: '', http: {} },
+    ],
   },
 })
 componentProperties.set('suspension', {
@@ -392,6 +494,19 @@ componentProperties.set('suspension', {
     text: '悬浮按钮',
     linktype: '10',
     http: {},
+    // F10 新增：位置偏移/FAB 展开菜单/透明度
+    position: 'right-bottom', //基础位置: right-bottom/left-bottom/right-top/left-top
+    offsetX: 20, //水平偏移(px, 0-200)
+    offsetY: 80, //垂直偏移(px, 0-400)
+    opacity: 100, //透明度(0-100)
+    mainIcon: '', //主按钮图标
+    fabMode: false, //是否启用 FAB 展开菜单
+    fabDirection: 'up', //展开方向: up/down/left/right
+    menuList: [
+      // FAB 展开子菜单，每项可配图标/文案/链接
+      { icon: '', text: '菜单一', linktype: '10', http: {} },
+      { icon: '', text: '菜单二', linktype: '10', http: {} },
+    ],
   },
 })
 

@@ -398,6 +398,86 @@
           >
         </el-radio-group>
       </el-form-item>
+
+      <!-- F4 新增：Mock 商品编辑器 -->
+      <div class="bor" />
+      <h5 style="color: #000; font-size: 14px; margin-top: 10px">商品编辑器</h5>
+      <p style="color: #969799; font-size: 12px; margin-top: 8px">
+        鼠标拖拽调整商品顺序
+      </p>
+
+      <!-- 列数 -->
+      <el-form-item class="lef" label="列数" style="margin-top: 10px">
+        <el-radio-group v-model="datas.columns">
+          <el-radio :label="index" v-for="index in 4" :key="index"
+            >{{ index }}列</el-radio
+          >
+        </el-radio-group>
+      </el-form-item>
+
+      <!-- 卡片阴影 -->
+      <el-form-item class="lef" label="卡片阴影">
+        <el-checkbox v-model="datas.cardShadow">显示</el-checkbox>
+      </el-form-item>
+
+      <!-- 按钮文案 -->
+      <el-form-item class="lef" label="按钮文案">
+        <el-input
+          v-model="datas.buttonText"
+          maxlength="8"
+          show-word-limit
+          placeholder="请输入按钮文案"
+        />
+      </el-form-item>
+
+      <!-- Mock 商品列表（可拖拽排序） -->
+      <vuedraggable
+        :list="datas.mockList"
+        item-key="index"
+        :forceFallback="true"
+        :animation="200"
+      >
+        <template #item="{ element, index }">
+          <section class="mockItem">
+            <!-- 删除商品 -->
+            <van-icon
+              class="el-icon-circle-close"
+              name="close"
+              @click="deleteMock(index)"
+            />
+            <!-- 商品图片，点击上传 -->
+            <div class="mock-imag" @click="showMockUpload(index)">
+              <img v-if="element.img" draggable="false" :src="element.img" alt="" />
+              <span v-else class="mock-add">+</span>
+            </div>
+            <!-- 商品信息编辑 -->
+            <div class="mock-text">
+              <!-- 标题 最长 20 -->
+              <el-input
+                v-model="element.title"
+                maxlength="20"
+                show-word-limit
+                placeholder="商品名称"
+              />
+              <!-- 价格 数字校验 -->
+              <el-input
+                v-model="element.price"
+                placeholder="价格，如 99.00"
+                @blur="checkPrice(index)"
+              />
+            </div>
+          </section>
+        </template>
+      </vuedraggable>
+
+      <!-- 添加商品按钮 -->
+      <el-button
+        @click="addMock"
+        class="uploadImg"
+        type="primary"
+        plain
+        >添加商品</el-button
+      >
     </el-form>
 
     <!-- 上传商品 -->
@@ -414,6 +494,7 @@
 import uploadCommodity from '../../uploadCommodity' //图片上传
 import uploadimg from '../../uploadImg' //图片上传
 import vuedraggable from 'vuedraggable' //拖拽组件
+import { ElMessage } from 'element-plus' // F4 新增：价格非法提示
 
 export default {
   name: 'listswitchingstyle',
@@ -514,6 +595,7 @@ export default {
         '右下',
       ],
       uploadImgDataType: null,
+      mockUploadIndex: null, // F4 新增：当前上传图片的 mock 商品索引
     }
   },
   created() {},
@@ -551,6 +633,13 @@ export default {
     // 背景图
     uploadInformation(res) {
       console.log(res, '---------uploadImg')
+      // F4 新增：mock 商品图片上传
+      if (this.uploadImgDataType === 'mock' && this.mockUploadIndex !== null) {
+        this.datas.mockList[this.mockUploadIndex].img = res
+        this.uploadImgDataType = null
+        this.mockUploadIndex = null
+        return
+      }
       if (this.uploadImgDataType === '0') {
         this.datas.bgImg = res
         console.log(this.datas.bgImg, '---------uploadImg')
@@ -575,6 +664,34 @@ export default {
     /* 删除分组 */
     delecommoditylisttypetab(index) {
       this.datas.commoditylisttypetab.splice(index, 1)
+    },
+
+    // F4 新增：添加 mock 商品
+    addMock() {
+      if (!Array.isArray(this.datas.mockList)) {
+        this.datas.mockList = []
+      }
+      this.datas.mockList.push({ title: '示例商品名称', price: '99.00', img: '' })
+    },
+    // F4 新增：删除 mock 商品
+    deleteMock(index) {
+      this.datas.mockList.splice(index, 1)
+    },
+    // F4 新增：为指定 mock 商品上传图片
+    showMockUpload(index) {
+      this.uploadImgDataType = 'mock'
+      this.mockUploadIndex = index
+      this.$refs.uploadImg.showUpload()
+    },
+    // F4 新增：价格格式校验（数字，可含两位小数），非法则提示并清空
+    checkPrice(index) {
+      const price = this.datas.mockList[index].price
+      if (price === '' || price === null || price === undefined) return
+      const reg = /^\d+(\.\d{1,2})?$/
+      if (!reg.test(String(price))) {
+        ElMessage.warning('请输入正确的价格（数字，最多两位小数）')
+        this.datas.mockList[index].price = ''
+      }
     },
   },
   computed: {
@@ -806,6 +923,61 @@ export default {
     margin-bottom: 20px;
     :deep(.el-input__inner) {
       text-align: center;
+    }
+  }
+
+  /* F4 新增：Mock 商品编辑器项样式 */
+  .mockItem {
+    padding: 10px 12px;
+    margin: 16px 7px;
+    border-radius: 2px;
+    background-color: #fff;
+    box-shadow: 0 0 4px 0 rgba(10, 42, 97, 0.2);
+    display: flex;
+    position: relative;
+
+    .el-icon-circle-close {
+      position: absolute;
+      right: -10px;
+      top: -10px;
+      cursor: pointer;
+      font-size: 19px;
+    }
+
+    /* 商品图片上传区 */
+    .mock-imag {
+      width: 60px;
+      height: 60px;
+      flex-shrink: 0;
+      border-radius: 5px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1px dashed #dcdfe6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fbfdff;
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .mock-add {
+        font-size: 24px;
+        color: #c0c4cc;
+      }
+    }
+
+    /* 商品信息编辑区 */
+    .mock-text {
+      flex: 1;
+      padding-left: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      .el-input {
+        margin-bottom: 8px;
+      }
     }
   }
 }
