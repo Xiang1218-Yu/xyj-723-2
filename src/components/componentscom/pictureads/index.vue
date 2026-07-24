@@ -33,6 +33,7 @@
 
     <!-- 轮播组件 -->
     <div
+      :ref="swiperRefName"
       class="swiper-container pointer-events"
       v-if="
         (imageList[0] && swiperType === 1) ||
@@ -65,7 +66,22 @@
       </div>
 
       <!-- 分页器 -->
-      <div class="swiper-pagination" style="color: #007aff"></div>
+      <div 
+        :class="paginationClass" 
+        :style="{ color: datas.arrowColor }"
+      ></div>
+      
+      <!-- 导航箭头 -->
+      <div 
+        v-if="datas.showArrows" 
+        class="swiper-button-prev"
+        :style="{ color: datas.arrowColor }"
+      ></div>
+      <div 
+        v-if="datas.showArrows" 
+        class="swiper-button-next"
+        :style="{ color: datas.arrowColor }"
+      ></div>
     </div>
 
     <!-- 删除组件 -->
@@ -83,31 +99,44 @@ export default {
     datas: Object,
   },
   data() {
+    // 生成唯一ID用于多实例区分
+    const uniqueId = Math.random().toString(36).substr(2, 9)
     return {
       mySwiper: null,
+      swiperRefName: 'swiperContainer_' + uniqueId,
+      paginationClass: 'swiper-pagination-' + uniqueId,
+      uniqueId: uniqueId,
     }
   },
   computed: {
     /* 类型切换 */
     swiperType() {
       console.log(this.datas.swiperType, '----------------轮播类型')
-      this.addSwiper()
+      this.$nextTick(() => {
+        this.addSwiper()
+      })
       return this.datas.swiperType
     },
     /* 图片删除或者增加 */
     imageList() {
-      this.addSwiper()
+      this.$nextTick(() => {
+        this.addSwiper()
+      })
       console.log(this.datas.imageList.length, '-------轮播数量')
       return this.datas.imageList
     },
     /* 分页器类型切换 */
     pagingType() {
-      this.addSwiper()
+      this.$nextTick(() => {
+        this.addSwiper()
+      })
       return this.datas.pagingType
     },
     /* 一行个数 */
     rowindividual() {
-      this.addSwiper()
+      this.$nextTick(() => {
+        this.addSwiper()
+      })
       if (this.datas.swiperType === 1) {
         return 1
       } else {
@@ -116,7 +145,9 @@ export default {
     },
     /* 图片间距 */
     imageMargin() {
-      this.addSwiper()
+      this.$nextTick(() => {
+        this.addSwiper()
+      })
       if (this.datas.swiperType === 1) {
         return 0
       } else {
@@ -128,6 +159,42 @@ export default {
     pagingType() {},
     rowindividual() {},
     imageMargin() {},
+    'datas.autoplayEnabled'() {
+      this.$nextTick(() => {
+        this.addSwiper()
+      })
+    },
+    'datas.autoplayDelay'() {
+      this.$nextTick(() => {
+        this.addSwiper()
+      })
+    },
+    'datas.loopEnabled'() {
+      this.$nextTick(() => {
+        this.addSwiper()
+      })
+    },
+    'datas.transitionEffect'() {
+      this.$nextTick(() => {
+        this.addSwiper()
+      })
+    },
+    'datas.speed'() {
+      this.$nextTick(() => {
+        this.addSwiper()
+      })
+    },
+    'datas.showArrows'() {
+      this.$nextTick(() => {
+        this.addSwiper()
+      })
+    },
+  },
+  mounted() {
+    // 组件挂载后初始化swiper
+    this.$nextTick(() => {
+      this.addSwiper()
+    })
   },
   methods: {
     /* 创建轮播对象 */
@@ -141,15 +208,33 @@ export default {
           } else if (this.mySwiper instanceof Object) {
             // 每次重新创建swiper前都要销毁之前存在的轮播   不然轮播会重复
             this.mySwiper.destroy()
+            this.mySwiper = null
           }
 
+          // 获取当前组件的容器元素
+          const containerEl = this.$refs[this.swiperRefName]
+          if (!containerEl) return
+
           let params = {
-            loop: true,
-            autoplay: true,
+            loop: this.datas.loopEnabled,
+            speed: this.datas.speed || 300,
+            effect: this.datas.transitionEffect || 'slide',
+            autoplay: this.datas.autoplayEnabled ? {
+              delay: this.datas.autoplayDelay || 3000,
+              disableOnInteraction: false,
+            } : false,
             pagination: {
-              el: '.swiper-pagination',
+              el: '.' + this.paginationClass,
               type: this.pagingType,
             },
+          }
+
+          // 添加导航箭头配置
+          if (this.datas.showArrows) {
+            params.navigation = {
+              nextEl: containerEl.querySelector('.swiper-button-next'),
+              prevEl: containerEl.querySelector('.swiper-button-prev'),
+            }
           }
 
           if (this.datas.swiperType === 1 || this.datas.swiperType === 2) {
@@ -160,7 +245,7 @@ export default {
             params.centeredSlides = true
           }
 
-          this.mySwiper = new Swiper('.swiper-container', params)
+          this.mySwiper = new Swiper(containerEl, params)
         } else {
           if (this.mySwiper instanceof Array) {
             this.mySwiper.forEach((element) => {
@@ -170,10 +255,18 @@ export default {
           // 每次重新创建swiper前都要销毁之前存在的轮播   不然轮播会重复
           if (this.mySwiper instanceof Object) {
             this.mySwiper.destroy()
+            this.mySwiper = null
           }
         }
       })
     },
+  },
+  beforeDestroy() {
+    // 组件销毁前清理swiper实例
+    if (this.mySwiper) {
+      this.mySwiper.destroy()
+      this.mySwiper = null
+    }
   },
 }
 </script>
@@ -315,6 +408,19 @@ export default {
   }
   .swiper-container-horizontal > .swiper-pagination-progressbar {
     height: 2px;
+  }
+  
+  /* 导航箭头样式 */
+  :deep(.swiper-button-prev),
+  :deep(.swiper-button-next) {
+    width: 36px;
+    height: 36px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+    &::after {
+      font-size: 14px;
+      font-weight: bold;
+    }
   }
 }
 </style>

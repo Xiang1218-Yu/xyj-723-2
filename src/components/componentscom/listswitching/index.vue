@@ -40,11 +40,12 @@
         ]"
         :style="{
           border: datas.moditystyle === 2 ? '1px solid rgba(50,50,51,0.1)' : '',
-          'box-shadow':
-            datas.moditystyle === 1 ? '0 2px 8px rgba(93,113,127,0.08)' : '',
+          'box-shadow': cardShadowStyle,
           margin: datas.commodityMargin + 'px',
           width:
-            datas.commodityType === 1
+            datas.columns
+              ? `calc(${columnWidth} - ${datas.commodityMargin * 2}px)`
+              : datas.commodityType === 1
               ? 50 - datas.commodityMargin / 6 + '%'
               : datas.commodityType === 2
               ? 33 - datas.commodityMargin / 5 + '%'
@@ -144,18 +145,10 @@
                 size="23"
                 v-show="datas.purchasebuttonType === 3"
               />
-              <em v-show="datas.purchasebuttonType === 4">{{
-                datas.purchase
-              }}</em>
-              <em v-show="datas.purchasebuttonType === 5">{{
-                datas.purchase
-              }}</em>
-              <em v-show="datas.purchasebuttonType === 6">{{
-                datas.purchase
-              }}</em>
-              <em v-show="datas.purchasebuttonType === 7">{{
-                datas.purchase
-              }}</em>
+              <em v-show="datas.purchasebuttonType === 4" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+              <em v-show="datas.purchasebuttonType === 5" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+              <em v-show="datas.purchasebuttonType === 6" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+              <em v-show="datas.purchasebuttonType === 7" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
             </div>
           </div>
         </div>
@@ -189,11 +182,12 @@
         ]"
         :style="{
           border: datas.moditystyle === 2 ? '1px solid rgba(50,50,51,0.1)' : '',
-          'box-shadow':
-            datas.moditystyle === 1 ? '0 2px 8px rgba(93,113,127,0.08)' : '',
+          'box-shadow': cardShadowStyle,
           margin: datas.commodityMargin + 'px',
           width:
-            datas.commodityType === 1
+            datas.columns
+              ? `calc(${columnWidth} - ${datas.commodityMargin * 2}px)`
+              : datas.commodityType === 1
               ? 50 - datas.commodityMargin / 6 + '%'
               : datas.commodityType === 2
               ? 33 - datas.commodityMargin / 5 + '%'
@@ -299,18 +293,10 @@
                 size="23"
                 v-show="datas.purchasebuttonType === 3"
               />
-              <em v-show="datas.purchasebuttonType === 4">{{
-                datas.purchase
-              }}</em>
-              <em v-show="datas.purchasebuttonType === 5">{{
-                datas.purchase
-              }}</em>
-              <em v-show="datas.purchasebuttonType === 6">{{
-                datas.purchase
-              }}</em>
-              <em v-show="datas.purchasebuttonType === 7">{{
-                datas.purchase
-              }}</em>
+              <em v-show="datas.purchasebuttonType === 4" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+              <em v-show="datas.purchasebuttonType === 5" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+              <em v-show="datas.purchasebuttonType === 6" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+              <em v-show="datas.purchasebuttonType === 7" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
             </div>
           </div>
         </div>
@@ -485,18 +471,10 @@
                       size="23"
                       v-show="datas.purchasebuttonType === 3"
                     />
-                    <em v-show="datas.purchasebuttonType === 4">{{
-                      datas.purchase
-                    }}</em>
-                    <em v-show="datas.purchasebuttonType === 5">{{
-                      datas.purchase
-                    }}</em>
-                    <em v-show="datas.purchasebuttonType === 6">{{
-                      datas.purchase
-                    }}</em>
-                    <em v-show="datas.purchasebuttonType === 7">{{
-                      datas.purchase
-                    }}</em>
+                    <em v-show="datas.purchasebuttonType === 4" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+                    <em v-show="datas.purchasebuttonType === 5" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+                    <em v-show="datas.purchasebuttonType === 6" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+                    <em v-show="datas.purchasebuttonType === 7" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
                   </div>
                 </div>
               </div>
@@ -647,18 +625,10 @@
                       size="23"
                       v-show="datas.purchasebuttonType === 3"
                     />
-                    <em v-show="datas.purchasebuttonType === 4">{{
-                      datas.purchase
-                    }}</em>
-                    <em v-show="datas.purchasebuttonType === 5">{{
-                      datas.purchase
-                    }}</em>
-                    <em v-show="datas.purchasebuttonType === 6">{{
-                      datas.purchase
-                    }}</em>
-                    <em v-show="datas.purchasebuttonType === 7">{{
-                      datas.purchase
-                    }}</em>
+                    <em v-show="datas.purchasebuttonType === 4" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+                    <em v-show="datas.purchasebuttonType === 5" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+                    <em v-show="datas.purchasebuttonType === 6" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+                    <em v-show="datas.purchasebuttonType === 7" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
                   </div>
                 </div>
               </div>
@@ -818,18 +788,10 @@
                         size="23"
                         v-show="datas.purchasebuttonType === 3"
                       />
-                      <em v-show="datas.purchasebuttonType === 4">{{
-                        datas.purchase
-                      }}</em>
-                      <em v-show="datas.purchasebuttonType === 5">{{
-                        datas.purchase
-                      }}</em>
-                      <em v-show="datas.purchasebuttonType === 6">{{
-                        datas.purchase
-                      }}</em>
-                      <em v-show="datas.purchasebuttonType === 7">{{
-                        datas.purchase
-                      }}</em>
+                      <em v-show="datas.purchasebuttonType === 4" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+                      <em v-show="datas.purchasebuttonType === 5" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+                      <em v-show="datas.purchasebuttonType === 6" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+                      <em v-show="datas.purchasebuttonType === 7" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
                     </div>
                   </div>
                 </div>
@@ -968,18 +930,10 @@
                         size="23"
                         v-show="datas.purchasebuttonType === 3"
                       />
-                      <em v-show="datas.purchasebuttonType === 4">{{
-                        datas.purchase
-                      }}</em>
-                      <em v-show="datas.purchasebuttonType === 5">{{
-                        datas.purchase
-                      }}</em>
-                      <em v-show="datas.purchasebuttonType === 6">{{
-                        datas.purchase
-                      }}</em>
-                      <em v-show="datas.purchasebuttonType === 7">{{
-                        datas.purchase
-                      }}</em>
+                      <em v-show="datas.purchasebuttonType === 4" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+                      <em v-show="datas.purchasebuttonType === 5" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+                      <em v-show="datas.purchasebuttonType === 6" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
+                      <em v-show="datas.purchasebuttonType === 7" :style="buttonStyle">{{ datas.buttonText || '立即购买' }}</em>
                     </div>
                   </div>
                 </div>
@@ -1081,6 +1035,30 @@ export default {
             ? (this.styleString.borderRadius = '10px 0px 0px 10px !important')
             : ''
           break
+      }
+    },
+  },
+  computed: {
+    // 计算卡片阴影样式
+    cardShadowStyle() {
+      if (this.datas.shadowEnabled) {
+        return `0 0 ${this.datas.shadowBlur}px ${this.datas.shadowColor}`
+      } else if (this.datas.moditystyle === 1) {
+        return '0 2px 8px rgba(93,113,127,0.08)'
+      }
+      return ''
+    },
+    // 计算列数宽度
+    columnWidth() {
+      const columns = this.datas.columns || 2
+      return `${100 / columns}%`
+    },
+    // 按钮样式
+    buttonStyle() {
+      return {
+        backgroundColor: this.datas.buttonBgColor || '#ff6b6b',
+        color: this.datas.buttonTextColor || '#ffffff',
+        borderColor: this.datas.buttonBgColor || '#ff6b6b',
       }
     },
   },

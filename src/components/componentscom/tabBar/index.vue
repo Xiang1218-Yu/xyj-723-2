@@ -13,7 +13,8 @@
           v-for="(item, index) in datas.iconList"
           :key="index"
           :name="item.iconName"
-          :dot="item.isDot"
+          :dot="item.iconBadge === 'dot'"
+          :badge="item.iconBadge && item.iconBadge !== 'dot' && item.iconBadge > 0 ? item.iconBadge : ''"
         >
           <span>{{ item.iconText }}</span>
           <template #icon="props">

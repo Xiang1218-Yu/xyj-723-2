@@ -8,23 +8,23 @@
           : '1px solid #fff',
       }"
     >
-      <!-- 标题 -->
-      <h2
-        :style="{
-          'font-size': datas.wordSize + 'px',
-          'font-weight': datas.wordWeight,
-          color: datas.wordColor,
-          'text-align': datas.positions,
-          height: datas.wordHeight + 'px',
-          'line-height': datas.wordHeight + 'px',
-          'padding-right': !(datas.positions !== 'center' && datas.more.show)
-            ? '0'
-            : '60px',
-        }"
-        v-if="datas.name"
-      >
-        {{ datas.name }}
-      </h2>
+      <!-- 标题区域 -->
+      <div class="title-area" :class="{ 'has-left-icon': datas.showLeftIcon && datas.leftIcon }">
+        <!-- 左侧图标 -->
+        <img
+          v-if="datas.showLeftIcon && datas.leftIcon"
+          :src="datas.leftIcon"
+          class="left-icon"
+          :style="{ width: datas.leftIconSize + 'px', height: datas.leftIconSize + 'px' }"
+        />
+        <!-- 标题 -->
+        <h2
+          :style="titleStyle"
+          v-if="datas.name"
+        >
+          {{ datas.name }}
+        </h2>
+      </div>
 
       <!-- 描述文字 -->
       <p
@@ -66,6 +66,35 @@ export default {
   props: {
     datas: Object,
   },
+  computed: {
+    titleStyle() {
+      const baseStyle = {
+        'font-size': this.datas.wordSize + 'px',
+        'font-weight': this.datas.wordWeight,
+        color: this.datas.wordColor,
+        'text-align': this.datas.positions,
+        height: this.datas.wordHeight + 'px',
+        'line-height': this.datas.wordHeight + 'px',
+        'padding-right': !(this.datas.positions !== 'center' && this.datas.more.show)
+          ? '0'
+          : '60px',
+      }
+      // 渐变效果
+      if (this.datas.gradientEnabled) {
+        let gradientDir = 'to right'
+        if (this.datas.gradientDirection === 'to bottom') {
+          gradientDir = 'to bottom'
+        } else if (this.datas.gradientDirection === 'to right bottom') {
+          gradientDir = 'to right bottom'
+        }
+        baseStyle.background = `linear-gradient(${gradientDir}, ${this.datas.gradientStart || this.datas.wordColor}, ${this.datas.gradientEnd || this.datas.wordColor})`
+        baseStyle['-webkit-background-clip'] = 'text'
+        baseStyle['-webkit-text-fill-color'] = 'transparent'
+        baseStyle['background-clip'] = 'text'
+      }
+      return baseStyle
+    }
+  }
 }
 </script>
 
@@ -77,6 +106,25 @@ export default {
   padding: 0 14px;
   min-height: 20px;
   position: relative;
+
+  /* 标题区域 */
+  .title-area {
+    display: flex;
+    align-items: center;
+    &.has-left-icon {
+      justify-content: flex-start;
+      h2 {
+        padding-left: 8px;
+        padding-right: 60px;
+      }
+    }
+  }
+
+  /* 左侧图标 */
+  .left-icon {
+    display: block;
+    flex-shrink: 0;
+  }
 
   h2,
   p {

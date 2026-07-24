@@ -67,7 +67,68 @@
         </div>
       </el-form-item>
 
+      <!-- 渐变线设置 -->
+      <template v-if="datas.segmentationtype === 1 && datas.bordertp === 'gradient'">
+        <div style="height: 10px" />
+
+        <!-- 渐变起始色 -->
+        <el-form-item class="lef" label="渐变起始">
+          <el-color-picker
+            v-model="datas.gradientStartColor"
+            show-alpha
+            class="picke"
+            :predefine="predefineColors"
+          >
+          </el-color-picker>
+        </el-form-item>
+
+        <div style="height: 10px" />
+
+        <!-- 渐变结束色 -->
+        <el-form-item class="lef" label="渐变结束">
+          <el-color-picker
+            v-model="datas.gradientEndColor"
+            show-alpha
+            class="picke"
+            :predefine="predefineColors"
+          >
+          </el-color-picker>
+        </el-form-item>
+
+        <div style="height: 10px" />
+
+        <!-- 线条粗细 -->
+        <el-form-item label="线条粗细" class="lef">
+          <el-slider
+            v-model="datas.lineWidth"
+            :max="5"
+            :min="1"
+            input-size="small"
+            show-input
+          >
+          </el-slider>
+        </el-form-item>
+      </template>
+
       <div v-show="datas.segmentationtype === 1" style="height: 20px" />
+
+      <!-- 线条粗细(非渐变) -->
+      <el-form-item
+        v-if="datas.segmentationtype === 1 && datas.bordertp !== 'gradient'"
+        label="线条粗细"
+        class="lef"
+      >
+        <el-slider
+          v-model="datas.lineWidth"
+          :max="5"
+          :min="1"
+          input-size="small"
+          show-input
+        >
+        </el-slider>
+      </el-form-item>
+
+      <div v-if="datas.segmentationtype === 1" style="height: 10px" />
 
       <!-- 左右边距 -->
       <el-form-item
@@ -97,15 +158,50 @@
         </div>
       </el-form-item>
 
+      <div v-show="datas.segmentationtype === 1" style="height: 10px" />
+
+      <!-- 左侧缩进 -->
+      <el-form-item
+        v-if="datas.segmentationtype === 1"
+        label="左侧缩进"
+        class="lef"
+      >
+        <el-slider
+          v-model="datas.leftIndent"
+          :max="40"
+          :min="0"
+          input-size="small"
+          show-input
+        >
+        </el-slider>
+      </el-form-item>
+
+      <div v-if="datas.segmentationtype === 1" style="height: 10px" />
+
+      <!-- 右侧缩进 -->
+      <el-form-item
+        v-if="datas.segmentationtype === 1"
+        label="右侧缩进"
+        class="lef"
+      >
+        <el-slider
+          v-model="datas.rightIndent"
+          :max="40"
+          :min="0"
+          input-size="small"
+          show-input
+        >
+        </el-slider>
+      </el-form-item>
+
       <div v-show="datas.segmentationtype === 1" style="height: 20px" />
 
       <!-- 辅助线颜色 -->
       <el-form-item
-        v-show="datas.segmentationtype === 1"
+        v-show="datas.segmentationtype === 1 && datas.bordertp !== 'gradient'"
         label="辅助线颜色"
         class="lef aa"
       >
-        <!-- 辅助线颜色 -->
         <el-color-picker
           v-model="datas.auxliarColor"
           show-alpha
@@ -114,6 +210,59 @@
         >
         </el-color-picker>
       </el-form-item>
+
+      <div v-show="datas.segmentationtype === 1" style="height: 20px" />
+
+      <!-- 显示文字 -->
+      <el-form-item
+        v-if="datas.segmentationtype === 1"
+        class="lef"
+        label="显示文字"
+      >
+        <el-switch v-model="datas.showText"></el-switch>
+      </el-form-item>
+
+      <!-- 文字设置 -->
+      <template v-if="datas.segmentationtype === 1 && datas.showText">
+        <div style="height: 10px" />
+
+        <!-- 中间文字 -->
+        <el-form-item class="lef" label="中间文字">
+          <el-input
+            v-model="datas.centerText"
+            placeholder="请输入分割线文字"
+            maxlength="20"
+            @input="validateCenterText"
+          ></el-input>
+        </el-form-item>
+
+        <div style="height: 10px" />
+
+        <!-- 文字颜色 -->
+        <el-form-item class="lef" label="文字颜色">
+          <el-color-picker
+            v-model="datas.textColor"
+            show-alpha
+            class="picke"
+            :predefine="predefineColors"
+          >
+          </el-color-picker>
+        </el-form-item>
+
+        <div style="height: 10px" />
+
+        <!-- 文字大小 -->
+        <el-form-item label="文字大小" class="lef">
+          <el-slider
+            v-model="datas.textSize"
+            :max="20"
+            :min="10"
+            input-size="small"
+            show-input
+          >
+          </el-slider>
+        </el-form-item>
+      </template>
     </el-form>
   </div>
 </template>
@@ -163,8 +312,57 @@ export default {
           text: '点线',
           type: 'dotted',
         },
+        {
+          icon: 'icon-icon_fengexian_shixian',
+          text: '双线',
+          type: 'double',
+        },
+        {
+          icon: 'icon-icon_fengexian_shixian',
+          text: '渐变线',
+          type: 'gradient',
+        },
       ],
     }
+  },
+  created() {
+    // 初始化数据
+    if (!this.datas.lineWidth) {
+      this.$set(this.datas, 'lineWidth', 1)
+    }
+    if (!this.datas.gradientStartColor) {
+      this.$set(this.datas, 'gradientStartColor', '#ff6b6b')
+    }
+    if (!this.datas.gradientEndColor) {
+      this.$set(this.datas, 'gradientEndColor', '#4ecdc4')
+    }
+    if (this.datas.leftIndent === undefined) {
+      this.$set(this.datas, 'leftIndent', 0)
+    }
+    if (this.datas.rightIndent === undefined) {
+      this.$set(this.datas, 'rightIndent', 0)
+    }
+    if (this.datas.showText === undefined) {
+      this.$set(this.datas, 'showText', false)
+    }
+    if (!this.datas.centerText) {
+      this.$set(this.datas, 'centerText', '')
+    }
+    if (!this.datas.textColor) {
+      this.$set(this.datas, 'textColor', '#999999')
+    }
+    if (!this.datas.textSize) {
+      this.$set(this.datas, 'textSize', 12)
+    }
+  },
+  methods: {
+    /* 中间文字长度校验 */
+    validateCenterText() {
+      if (this.datas.centerText && this.datas.centerText.length > 20) {
+        this.datas.centerText = this.datas.centerText.substring(0, 20)
+        this.$message.warning('文字最多20个字')
+      }
+    },
   },
 }
 </script>

@@ -226,47 +226,66 @@
 
     <!-- 表单 -->
     <el-form label-width="80px" :model="datas">
-      <section
-        class="magiccubestyleList"
-        v-for="(item, index) in datas.imageList"
-        :key="index"
-        v-show="imgActive === index"
+      <!-- 拖拽排序图片列表 -->
+      <p style="color: #969799; font-size: 12px; margin: 10px 0">
+        拖动图片可调整排序
+      </p>
+      <vuedraggable
+        v-model="datas.imageList"
+        item-key="src"
+        :animation="200"
+        class="image-drag-list"
       >
-        <!-- 图片 -->
-        <div class="imag" @click="$refs.upload.showUpload()">
-          <img
-            draggable="false"
-            v-if="!item.src"
-            src="../../../assets/images/add.png"
-            style="border: 1px solid #e5e5e5"
-            alt=""
-          />
-          <div v-else style="position: relative">
-            <img draggable="false" :src="item.src" alt="" />
-            <p>点击更换图</p>
-          </div>
-        </div>
-        <!-- 标题和链接 -->
-        <div class="imgText">
-          <!-- 选择类型 -->
-          <el-select v-model="item.linktype" placeholder="请选择跳转类型">
-            <el-option
-              v-for="item in optionsType"
-              :key="item.name"
-              :label="item.name"
-              :value="item.type"
-            >
-            </el-option>
-          </el-select>
-
-          <!-- 输入链接 -->
-          <el-input
-            placeholder="请输入链接，输入前确保可以访问"
-            v-model="item.http.externalLink"
+        <template #item="{ element, index }">
+          <section
+            class="magiccubestyleList"
+            v-show="imgActive === index || true"
+            :class="{ 'active-item': imgActive === index }"
+            @click="imgActive = index"
           >
-          </el-input>
-        </div>
-      </section>
+            <!-- 图片 -->
+            <div class="imag" @click.stop="$refs.upload.showUpload()">
+              <img
+                draggable="false"
+                v-if="!element.src"
+                src="../../../assets/images/add.png"
+                style="border: 1px solid #e5e5e5"
+                alt=""
+              />
+              <div v-else style="position: relative">
+                <img draggable="false" :src="element.src" alt="" />
+                <p>点击更换图</p>
+              </div>
+            </div>
+            <!-- 标题和链接 -->
+            <div class="imgText">
+              <!-- 选择类型 -->
+              <el-select v-model="element.linktype" placeholder="请选择跳转类型">
+                <el-option
+                  v-for="opt in optionsType"
+                  :key="opt.name"
+                  :label="opt.name"
+                  :value="opt.type"
+                >
+                </el-option>
+              </el-select>
+
+              <!-- 输入链接 -->
+              <el-input
+                placeholder="请输入链接，http/https开头"
+                v-model="element.http.externalLink"
+                @blur="validateUrl(element)"
+              >
+              </el-input>
+            </div>
+            <van-icon
+              class="delete-icon"
+              name="close"
+              @click.stop="removeImage(index)"
+            />
+          </section>
+        </template>
+      </vuedraggable>
 
       <div style="height: 20px" />
 
@@ -296,6 +315,39 @@
           />
         </el-tooltip>
       </div>
+
+      <div style="height: 20px" />
+
+      <!-- 图片比例 -->
+      <el-form-item label="图片比例" class="lef">
+        <el-select v-model="datas.aspectRatio" placeholder="请选择图片比例">
+          <el-option label="1:1 (正方形)" value="1:1"></el-option>
+          <el-option label="4:3 (横版)" value="4:3"></el-option>
+          <el-option label="16:9 (宽屏)" value="16:9"></el-option>
+          <el-option label="3:4 (竖版)" value="3:4"></el-option>
+        </el-select>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- 图片圆角 -->
+      <el-form-item label="图片圆角" class="lef">
+        <el-slider
+          v-model="datas.borderRadius"
+          :max="30"
+          :min="0"
+          input-size="small"
+          show-input
+        >
+        </el-slider>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- 单格链接 -->
+      <el-form-item label="单格链接" class="lef">
+        <el-switch v-model="datas.enableSingleLink"></el-switch>
+      </el-form-item>
 
       <div style="height: 20px" />
 
@@ -329,13 +381,14 @@
 
 <script>
 import uploadimg from '../../uploadImg' //图片上传
+import vuedraggable from 'vuedraggable' //拖拽组件
 
 export default {
   name: 'magiccubestyle',
   props: {
     datas: Object,
   },
-  components: { uploadimg },
+  components: { uploadimg, vuedraggable },
   data() {
     return {
       rubiksCubeTypes: [
@@ -403,11 +456,33 @@ export default {
       if (this.datas.rubiksCubeType === 6) return '一左三右'
     },
   },
-  created() {},
+  created() {
+    // 确保imageList每项都有必要字段
+    this.datas.imageList.forEach((item) => {
+      if (!item.linktype) item.linktype = '10'
+      if (!item.http) item.http = {}
+    })
+  },
   methods: {
     /* 替换 */
     uploadInformation(res) {
       this.datas.imageList[this.imgActive].src = res
+    },
+    /* URL格式校验 */
+    validateUrl(item) {
+      if (item.http && item.http.externalLink) {
+        const url = item.http.externalLink
+        if (url && !/^https?:\/\//.test(url)) {
+          this.$message.warning('链接需以http://或https://开头')
+          item.http.externalLink = ''
+        }
+      }
+    },
+    /* 删除图片 */
+    removeImage(index) {
+      this.datas.imageList[index].src = ''
+      this.datas.imageList[index].linktype = '10'
+      this.datas.imageList[index].http = {}
     },
   },
 }
@@ -430,6 +505,12 @@ export default {
     font-size: 18px;
     font-weight: 600;
     color: #323233;
+  }
+
+  /* 图片拖拽列表 */
+  .image-drag-list {
+    max-height: 400px;
+    overflow-y: auto;
   }
 
   /* 布局 */
@@ -467,10 +548,8 @@ export default {
       &.rubiksCubeType0 {
         width: 163px;
         margin: 10px 0;
-        // height: 200px;
         img {
           width: 100%;
-          // height: 200px;
         }
       }
       &.rubiksCubeType1 {
@@ -526,14 +605,25 @@ export default {
     box-shadow: 0 0 4px 0 rgba(10, 42, 97, 0.2);
     display: flex;
     position: relative;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: all 0.3s;
+
+    &.active-item {
+      border-color: #155bd4;
+      background: #f0f7ff;
+    }
 
     /* 删除图标 */
-    .el-icon-circle-close {
+    .delete-icon {
       position: absolute;
       right: -10px;
       top: -10px;
       cursor: pointer;
       font-size: 19px;
+      color: #f56c6c;
+      background: #fff;
+      border-radius: 50%;
     }
 
     /* 图片 */

@@ -58,13 +58,19 @@
         >
           <!-- 视频名称 -->
           <h5>这里显示商品名称，最多显示2行</h5>
+          <!-- 标签展示 -->
+          <div v-if="datas.showTags && datas.tags && datas.tags.length" class="tags-list">
+            <span v-for="(tag, tagIdx) in datas.tags" :key="tagIdx" class="tag-item">{{ tag }}</span>
+          </div>
           <!-- 点赞和阅读量 -->
           <div class="dianz">
-            <span class="fir" v-if="datas.readingNumber">999 阅读</span>
+            <span class="fir" v-if="datas.readingNumber">
+              {{ datas.useCustomCount ? datas.customReadCount : 999 }} 阅读
+            </span>
             <span v-else></span>
-            <span v-show="datas.praisePoints"
-              ><van-icon name="good-job-o" /> 999</span
-            >
+            <span v-show="datas.praisePoints">
+              <van-icon name="good-job-o" /> {{ datas.useCustomCount ? datas.customPraiseCount : 999 }}
+            </span>
           </div>
         </div>
       </div>
@@ -108,9 +114,21 @@
           style="position: relative; width: 100%"
           :class="[datas.positions === 'top' ? 'containoptions' : '']"
         >
-          <img draggable="false" :src="item.src" alt="" />
+          <!-- 多图模式或单图 -->
+          <div v-if="datas.multiImage && item.images && item.images.length > 0" class="multi-images">
+            <div
+              v-for="(img, imgIdx) in item.images.slice(0, 3)"
+              :key="imgIdx"
+              class="multi-img-item"
+            >
+              <img draggable="false" :src="img" alt="" />
+            </div>
+          </div>
+          <img v-else draggable="false" :src="item.src" alt="" />
           <!-- 标签 -->
-          <p class="marks" v-if="datas.noteLabels"><span>#</span>笔记标签</p>
+          <p class="marks" v-if="datas.noteLabels">
+            <span>#</span>{{ item.tags && item.tags.length ? item.tags[0] : '笔记标签' }}
+          </p>
         </div>
 
         <!-- 文字内容 -->
@@ -119,15 +137,44 @@
           :class="[datas.positions === 'top' ? 'positionsTop' : '']"
           :style="{ background: datas.moditystyle !== 3 ? '#fff' : 'none' }"
         >
+          <!-- 作者信息 -->
+          <div v-if="datas.showAuthor && (item.author || datas.author)" class="author-info">
+            <img
+              :src="item.authorAvatar || datas.authorAvatar || '../../../assets/images/Robot.png'"
+              class="author-avatar"
+              alt=""
+            />
+            <span class="author-name">{{ item.author || datas.author }}</span>
+          </div>
           <!-- 视频名称 -->
           <h5>{{ item.text }}</h5>
+          <!-- 标签展示 -->
+          <div
+            v-if="datas.showTags && ((item.tags && item.tags.length) || (datas.tags && datas.tags.length))"
+            class="tags-list"
+          >
+            <span
+              v-for="(tag, tagIdx) in (item.tags && item.tags.length ? item.tags : datas.tags)"
+              :key="tagIdx"
+              class="tag-item"
+            >
+              {{ tag }}
+            </span>
+          </div>
           <!-- 点赞和阅读量 -->
           <div class="dianz">
-            <span class="fir" v-if="datas.readingNumber">999 阅读</span>
+            <span class="fir" v-if="datas.readingNumber">
+              {{ datas.useCustomCount ? (item.readCount || datas.customReadCount) : 999 }} 阅读
+            </span>
             <span v-else></span>
-            <span v-show="datas.praisePoints"
-              ><van-icon name="good-job-o" /> 999</span
-            >
+            <span v-show="datas.praisePoints">
+              <van-icon name="good-job-o" />
+              {{ datas.useCustomCount ? (item.praiseCount || datas.customPraiseCount) : 999 }}
+            </span>
+          </div>
+          <!-- 发布时间 -->
+          <div v-if="datas.showTime && (item.publishTime || datas.publishTime)" class="publish-time">
+            {{ item.publishTime || datas.publishTime }}
           </div>
         </div>
       </div>
@@ -450,6 +497,69 @@ export default {
             }
           }
         }
+      }
+
+      /* 多图网格样式 */
+      .multi-images {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 2px;
+        width: 100%;
+        .multi-img-item {
+          width: 100%;
+          padding-top: 100%;
+          position: relative;
+          img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+          }
+        }
+      }
+
+      /* 作者信息 */
+      .author-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 6px;
+        .author-avatar {
+          width: 20px;
+          height: 20px;
+          border-radius: 50%;
+          margin-right: 6px;
+          object-fit: cover;
+        }
+        .author-name {
+          font-size: 12px;
+          color: #666;
+        }
+      }
+
+      /* 标签样式 */
+      .tags-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 4px 0;
+        .tag-item {
+          display: inline-block;
+          font-size: 11px;
+          color: #155bd4;
+          background: #e0edff;
+          padding: 1px 6px;
+          border-radius: 3px;
+          line-height: 1.4;
+        }
+      }
+
+      /* 发布时间 */
+      .publish-time {
+        font-size: 11px;
+        color: #999;
+        margin-top: 4px;
       }
 
       /* 标签 */

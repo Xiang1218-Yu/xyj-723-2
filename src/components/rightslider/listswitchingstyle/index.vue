@@ -4,7 +4,7 @@
     <h2>{{ datas.text }}</h2>
 
     <!-- 表单 -->
-    <el-form label-width="80px" :model="datas" :rules="rules">
+    <el-form label-width="80px" :model="datas" :rules="rules" ref="listForm">
       <!-- 标题内容 -->
       <el-form-item
         class="lef"
@@ -45,6 +45,16 @@
           <el-radio :label="index - 1" v-for="index in 3" :key="index"
             >类型{{ index }}</el-radio
           >
+        </el-radio-group>
+      </el-form-item>
+
+      <!-- 列数选择 -->
+      <el-form-item label="显示列数" class="lef">
+        <el-radio-group v-model="datas.columns">
+          <el-radio :label="1">1列</el-radio>
+          <el-radio :label="2">2列</el-radio>
+          <el-radio :label="3">3列</el-radio>
+          <el-radio :label="4">4列</el-radio>
         </el-radio-group>
       </el-form-item>
 
@@ -230,6 +240,76 @@
 
       <div class="bor" />
 
+      <!-- 卡片阴影配置 -->
+      <el-form-item class="lef" label="卡片阴影">
+        {{ datas.shadowEnabled ? '开启' : '关闭' }}
+        <el-checkbox style="margin-left: 196px" v-model="datas.shadowEnabled" />
+      </el-form-item>
+      
+      <el-form-item 
+        label="阴影颜色" 
+        class="lef"
+        v-show="datas.shadowEnabled"
+      >
+        <el-color-picker
+          v-model="datas.shadowColor"
+          show-alpha
+          class="picke"
+          :predefine="predefineColors"
+        >
+        </el-color-picker>
+      </el-form-item>
+      
+      <el-form-item 
+        label="阴影模糊" 
+        class="lef" 
+        prop="shadowBlur"
+        v-show="datas.shadowEnabled"
+      >
+        <el-slider
+          v-model="datas.shadowBlur"
+          :min="0"
+          :max="20"
+          input-size="small"
+          show-input
+        ></el-slider>
+      </el-form-item>
+
+      <div class="bor" />
+
+      <!-- 按钮配置 -->
+      <el-form-item label="按钮文案" class="lef" prop="buttonText">
+        <el-input
+          v-model="datas.buttonText"
+          placeholder="请输入按钮文案"
+          maxlength="10"
+          show-word-limit
+        >
+        </el-input>
+      </el-form-item>
+      
+      <el-form-item label="按钮背景色" class="lef">
+        <el-color-picker
+          v-model="datas.buttonBgColor"
+          show-alpha
+          class="picke"
+          :predefine="predefineColors"
+        >
+        </el-color-picker>
+      </el-form-item>
+      
+      <el-form-item label="按钮文字色" class="lef">
+        <el-color-picker
+          v-model="datas.buttonTextColor"
+          show-alpha
+          class="picke"
+          :predefine="predefineColors"
+        >
+        </el-color-picker>
+      </el-form-item>
+
+      <div class="bor" />
+
       <!-- 显示位置 -->
       <el-form-item label="显示位置" class="lef">
         <div class="weiz">
@@ -349,12 +429,6 @@
         <el-radio :label="index - 1" v-for="index in 8" :key="index"
           >样式{{ index }}</el-radio
         >
-
-        <el-input
-          v-show="datas.purchasebuttonType > 3"
-          style="width: 40%; margin-top: 10px"
-          v-model="datas.purchase"
-        />
       </el-radio-group>
 
       <div style="height: 10px" />
@@ -425,6 +499,22 @@ export default {
     let kon = (rule, value, callback) => {
       if (value.length === 0) callback(new Error('请输入有效数字'))
     }
+    // 按钮文案长度校验
+    const validateButtonText = (rule, value, callback) => {
+      if (value && value.length > 10) {
+        callback(new Error('按钮文案最多10个字'))
+      } else {
+        callback()
+      }
+    }
+    // 阴影模糊度范围校验
+    const validateShadowBlur = (rule, value, callback) => {
+      if (value < 0 || value > 20) {
+        callback(new Error('阴影模糊度应在0-20之间'))
+      } else {
+        callback()
+      }
+    }
     return {
       color1: '#07c160',
       moditystyles: [
@@ -480,6 +570,12 @@ export default {
       ],
       rules: {
         textWeight: [{ required: true, validator: kon, trigger: 'blur' }],
+        buttonText: [
+          { validator: validateButtonText, trigger: 'blur' }
+        ],
+        shadowBlur: [
+          { validator: validateShadowBlur, trigger: 'change' }
+        ],
       },
       marker: ['新品', '热卖', 'NEW', 'HOT'],
       imgText: null, //当前选中的类型

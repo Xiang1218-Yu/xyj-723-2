@@ -18,6 +18,8 @@
         <el-button @click="catJson">查看JSON </el-button>
         <el-button @click="$refs.file.click()">导入JSON </el-button>
         <el-button @click="exportJSON">导出JSON </el-button>
+        <el-button @click="exportHTML" type="success">导出HTML </el-button>
+        <el-button @click="exportPNG" type="warning">导出PNG </el-button>
         <input
           type="file"
           ref="file"
@@ -45,10 +47,7 @@
           <!-- 主体内容 -->
           <section
             class="phone-container"
-            :style="{
-              'background-color': pageSetup.bgColor,
-              backgroundImage: 'url(' + pageSetup.bgImg + ')',
-            }"
+            :style="containerStyle"
             @drop="drop($event)"
             @dragover="allowDrop($event)"
             @dragleave="dragleaves($event)"
@@ -142,8 +141,10 @@
       :val="{
         id,
         name: pageSetup.name,
+        pageSetup: pageSetup,
+        component: pageComponents,
         templateJson: JSON.stringify(pageSetup),
-        component: JSON.stringify(pageComponents),
+        componentJson: JSON.stringify(pageComponents),
       }"
     />
   </div>
@@ -153,9 +154,12 @@
 import utils from 'utils/index' // 方法类
 import componentProperties from '@/utils/componentProperties' // 组件数据
 import FileSaver from 'file-saver' // 导出JSON
-import { reactive, watch, toRefs, inject } from 'vue'
+import { reactive, watch, toRefs, inject, computed } from 'vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import vuedraggable from 'vuedraggable' //拖拽组件
+
+// 获取pageSetupDefaults
+const pageSetupDefaults = componentProperties.get('pageSetupDefaults')
 
 // 是否显示预览
 const realTimeViewData = reactive({ show: false })
@@ -163,18 +167,97 @@ const realTimeViewData = reactive({ show: false })
 // 页面数据
 const datas = reactive({
   id: null, //当前页面id
-  pageSetup: {
-    // 页面设置属性
-    name: '页面标题', //页面名称
-    details: '', //页面描述
-    isPerson: false, // 是否显示个人中心
-    isBack: true, // 是否返回按钮
-    titleHeight: 35, // 高度
-    bgColor: 'rgba(249, 249, 249, 10)', //背景颜色
-    bgImg: '', // 背景图片
-  },
+  pageSetup: utils.assiginObj({}, pageSetupDefaults), // 页面设置属性，使用默认值
   pageComponents: [], //页面组件
 })
+
+// 计算容器样式
+const containerStyle = computed(() => {
+  const ps = datas.pageSetup
+  let style = {
+    paddingTop: (ps.pageMarginTop || 0) + 'px',
+    paddingBottom: (ps.pageMarginBottom || 0) + 'px',
+    paddingLeft: (ps.pageMarginLeft || 0) + 'px',
+    paddingRight: (ps.pageMarginRight || 0) + 'px',
+  }
+
+  if (ps.bgType === 'gradient') {
+    style.background = `linear-gradient(${ps.gradientDirection || 'to bottom'}, ${ps.gradientStart || '#667eea'}, ${ps.gradientEnd || '#764ba2'})`
+  } else if (ps.bgType === 'image' && ps.bgImg) {
+    style.backgroundImage = 'url(' + ps.bgImg + ')'
+    style.backgroundSize = ps.bgSize || 'cover'
+    style.backgroundRepeat = ps.bgRepeat || 'no-repeat'
+    style.backgroundColor = 'transparent'
+  } else {
+    style.backgroundColor = ps.bgColor
+    if (ps.bgImg) {
+      style.backgroundImage = 'url(' + ps.bgImg + ')'
+    }
+  }
+
+  return style
+})
+
+// 导出HTML
+const exportHTML = () => {
+  // 简单的静态HTML导出
+  const htmlContent = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${datas.pageSetup.name}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+    .phone-container { max-width: 375px; margin: 0 auto; min-height: 100vh; background: ${datas.pageSetup.bgType === 'gradient' ? `linear-gradient(${datas.pageSetup.gradientDirection}, ${datas.pageSetup.gradientStart}, ${datas.pageSetup.gradientEnd})` : datas.pageSetup.bgColor}; padding: ${datas.pageSetup.pageMarginTop}px ${datas.pageSetup.pageMarginRight}px ${datas.pageSetup.pageMarginBottom}px ${datas.pageSetup.pageMarginLeft}px; }
+    .header { background: ${datas.pageSetup.titleBgColor}; color: ${datas.pageSetup.titleTextColor}; height: ${datas.pageSetup.titleHeight}px; line-height: ${datas.pageSetup.titleHeight}px; text-align: center; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="phone-container">
+    <div class="header">${datas.pageSetup.name}</div>
+    <!-- 组件内容将通过JavaScript渲染 -->
+    <div id="app"></div>
+  </div>
+  <script>
+    window.__PAGE_DATA__ = ${JSON.stringify({
+      pageSetup: datas.pageSetup,
+      components: datas.pageComponents,
+    })};
+  <\/script>
+</body>
+</html>`
+
+  const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' })
+  FileSaver.saveAs(blob, `${datas.pageSetup.name}.html`)
+  ElMessage.success('HTML导出成功！')
+}
+
+// 导出PNG
+const exportPNG = async () => {
+  try {
+    // 动态导入html2canvas
+    const html2canvas = (await import('html2canvas')).default
+    const element = document.getElementById('imageTofile')
+    if (!element) {
+      ElMessage.error('未找到预览区域')
+      return
+    }
+    const canvas = await html2canvas(element, {
+      useCORS: true,
+      scale: 2,
+      backgroundColor: '#ffffff',
+    })
+    canvas.toBlob((blob) => {
+      FileSaver.saveAs(blob, `${datas.pageSetup.name}.png`)
+      ElMessage.success('PNG导出成功！')
+    })
+  } catch (error) {
+    console.error('导出PNG失败:', error)
+    ElMessage.error('导出PNG失败，请确保已安装html2canvas依赖')
+  }
+}
 
 // 查看JSON
 const catJson = () => {
@@ -184,6 +267,8 @@ const catJson = () => {
           "id": ${datas.id},
           <br/>
           "name": "${datas.pageSetup.name}",
+          <br/>
+          "version": "${datas.pageSetup.version || 'V2.0.0'}",
           <br/>
           "templateJson": '${JSON.stringify(datas.pageSetup)}',
           <br/>
@@ -206,6 +291,7 @@ const exportJSON = () => {
   const data = JSON.stringify({
     id: datas.id,
     name: datas.pageSetup.name,
+    version: datas.pageSetup.version || 'V2.0.0',
     templateJson: JSON.stringify(datas.pageSetup),
     component: JSON.stringify(datas.pageComponents),
   })
@@ -214,20 +300,77 @@ const exportJSON = () => {
 }
 
 // 导入json
-const importJSON = () => {
-  const file = document.getElementById('file').files[0]
+const importJSON = (event) => {
+  const file = event.target.files[0]
+  if (!file) return
+
   const reader = new FileReader()
   reader.readAsText(file)
-  let _this = datas
+
   reader.onload = function () {
-    // this.result为读取到的json字符串，需转成json对象
-    let ImportJSON = JSON.parse(this.result)
-    // 检测是否导入成功
-    console.log(ImportJSON, '-----------------导入成功')
-    // 导入JSON数据
-    _this.id = ImportJSON.id
-    _this.pageSetup = JSON.parse(ImportJSON.templateJson)
-    _this.pageComponents = JSON.parse(ImportJSON.component)
+    try {
+      // this.result为读取到的json字符串，需转成json对象
+      const resultStr = this.result
+      if (!resultStr || typeof resultStr !== 'string') {
+        throw new Error('文件内容为空')
+      }
+
+      let ImportJSON
+      try {
+        ImportJSON = JSON.parse(resultStr)
+      } catch (e) {
+        throw new Error('JSON格式错误，请检查文件内容')
+      }
+
+      console.log(ImportJSON, '-----------------导入成功')
+
+      // 解析templateJson
+      let importedPageSetup = {}
+      try {
+        importedPageSetup = JSON.parse(ImportJSON.templateJson)
+      } catch (e) {
+        throw new Error('页面设置数据格式错误')
+      }
+
+      // 解析组件数据
+      let importedComponents = []
+      try {
+        importedComponents = JSON.parse(ImportJSON.component)
+      } catch (e) {
+        throw new Error('组件数据格式错误')
+      }
+
+      // 版本迁移逻辑
+      const importedVersion = importedPageSetup.version || ImportJSON.version || 'V1.0.0'
+      if (importedVersion && importedVersion.startsWith('V1')) {
+        // 旧版本数据，使用assiginObj合并默认值补全新字段
+        ElMessage.info('检测到旧版本数据，正在自动迁移...')
+        importedPageSetup = utils.assiginObj(utils.deepClone(pageSetupDefaults), importedPageSetup)
+        importedPageSetup.version = 'V2.0.0'
+      } else {
+        // 新版本数据，仍然合并确保字段完整
+        importedPageSetup = utils.assiginObj(utils.deepClone(pageSetupDefaults), importedPageSetup)
+      }
+
+      // 导入JSON数据
+      datas.id = ImportJSON.id || null
+      datas.pageSetup = importedPageSetup
+      datas.pageComponents = importedComponents || []
+
+      ElMessage.success('导入成功！')
+    } catch (error) {
+      console.error('导入失败:', error)
+      ElMessage.error('导入失败: ' + (error.message || '未知错误'))
+    } finally {
+      // 重置文件input，允许重复选择同一个文件
+      if (event && event.target) {
+        event.target.value = ''
+      }
+    }
+  }
+
+  reader.onerror = function () {
+    ElMessage.error('文件读取失败')
   }
 }
 
@@ -602,6 +745,8 @@ const { deleShow, rightcom, currentproperties, pointer } = toRefs(choose)
     box-sizing: border-box;
     padding-right: 15px;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
     /* 下拉 */
     .frop {
       padding-right: 15px;
@@ -613,13 +758,21 @@ const { deleShow, rightcom, currentproperties, pointer } = toRefs(choose)
     }
     .el-button {
       font-size: 14px;
-      padding: 0 16px;
+      padding: 0 12px;
       height: 30px;
       &.el-button--primary {
         background: #155bd4;
       }
       &.el-button--danger {
         background: red;
+      }
+      &.el-button--success {
+        background: #07c160;
+        border-color: #07c160;
+      }
+      &.el-button--warning {
+        background: #ff976a;
+        border-color: #ff976a;
       }
     }
   }
@@ -645,9 +798,6 @@ const { deleShow, rightcom, currentproperties, pointer } = toRefs(choose)
     &::-webkit-scrollbar {
       width: 1px;
     }
-    // &::-webkit-scrollbar-thumb {
-    //   background-color: #155bd4;
-    // }
 
     /* 手机样式 */
     .phoneAll {

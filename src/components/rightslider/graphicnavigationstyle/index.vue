@@ -16,7 +16,7 @@
         :forceFallback="true"
         :animation="200"
       >
-        <template #item="{ element }">
+        <template #item="{ element, index }">
           <section class="imgList">
             <van-icon
               class="el-icon-circle-close"
@@ -24,7 +24,7 @@
               @click="deleteimg(index)"
             />
             <!-- 图片 -->
-            <div class="imag">
+            <div class="imag" @click="currentIndex = index; showUpload('0')">
               <img draggable="false" :src="element.src" alt="" />
             </div>
             <!-- 标题和链接 -->
@@ -32,6 +32,7 @@
               <el-input
                 v-model="element.text"
                 placeholder="请输入标题，也可不填"
+                maxlength="10"
               ></el-input>
               <!-- 选择类型 -->
               <div class="select-type">
@@ -52,14 +53,15 @@
                 <!-- 输入链接 -->
                 <el-input
                   style="width: 100%"
-                  placeholder="请输入链接，输入前确保可以访问"
+                  placeholder="请输入链接，http/https开头"
                   v-model="element.http.externalLink"
+                  @blur="validateUrl(element)"
                 >
                 </el-input>
               </div>
             </div>
-          </section> </template
-        >>
+          </section>
+        </template>
       </vuedraggable>
     </div>
 
@@ -73,7 +75,7 @@
     <!-- 表单 -->
     <el-form label-width="80px" :model="datas">
       <!-- 商品类型选择 -->
-      <el-form-item class="lef" label="商品类型">
+      <el-form-item class="lef" label="导航类型">
         <el-radio-group v-model="datas.navigationType">
           <el-radio
             style="margin-left: 35px"
@@ -83,6 +85,27 @@
             >{{ index === 1 ? '图片导航' : '文字导航' }}</el-radio
           >
         </el-radio-group>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- 卡片样式 -->
+      <el-form-item class="lef" label="卡片样式">
+        <el-radio-group v-model="datas.cardStyle">
+          <el-radio :label="0" style="margin-left: 35px">默认小图</el-radio>
+          <el-radio :label="1">大图卡片</el-radio>
+        </el-radio-group>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
+      <!-- 图标形状 -->
+      <el-form-item class="lef" label="图标形状">
+        <el-select v-model="datas.iconShape" placeholder="请选择图标形状">
+          <el-option label="圆形" value="circle"></el-option>
+          <el-option label="方形" value="square"></el-option>
+          <el-option label="圆角方形" value="rounded"></el-option>
+        </el-select>
       </el-form-item>
 
       <div style="height: 10px" />
@@ -173,6 +196,89 @@
 
       <div style="height: 10px" />
 
+      <!-- 显示角标 -->
+      <el-form-item class="lef" label="显示角标">
+        <el-switch v-model="datas.showBadge"></el-switch>
+      </el-form-item>
+
+      <!-- 角标设置 -->
+      <template v-if="datas.showBadge">
+        <div style="height: 10px" />
+
+        <!-- 角标类型 -->
+        <el-form-item class="lef" label="角标类型">
+          <el-select v-model="datas.badgeType" placeholder="请选择角标类型">
+            <el-option label="HOT" value="hot"></el-option>
+            <el-option label="NEW" value="new"></el-option>
+            <el-option label="自定义" value="custom"></el-option>
+          </el-select>
+        </el-form-item>
+
+        <!-- 自定义角标文字 -->
+        <el-form-item
+          v-if="datas.badgeType === 'custom'"
+          class="lef"
+          label="角标文字"
+        >
+          <el-input
+            v-model="datas.badgeText"
+            placeholder="请输入角标文字"
+            maxlength="5"
+            @input="validateBadgeText"
+          ></el-input>
+        </el-form-item>
+
+        <div style="height: 10px" />
+
+        <!-- 角标颜色 -->
+        <el-form-item class="lef" label="角标颜色">
+          <el-color-picker
+            v-model="datas.badgeColor"
+            show-alpha
+            class="picke"
+            :predefine="predefineColors"
+          >
+          </el-color-picker>
+        </el-form-item>
+      </template>
+
+      <div style="height: 10px" />
+
+      <!-- 卡片内边距(大图卡片模式) -->
+      <el-form-item
+        v-if="datas.cardStyle === 1"
+        label="卡片内边距"
+        class="lef"
+      >
+        <el-slider
+          v-model="datas.cardPadding"
+          :max="20"
+          :min="0"
+          input-size="small"
+          show-input
+        >
+        </el-slider>
+      </el-form-item>
+
+      <div v-if="datas.cardStyle === 1" style="height: 10px" />
+
+      <!-- 卡片背景色(大图卡片模式) -->
+      <el-form-item
+        v-if="datas.cardStyle === 1"
+        class="lef"
+        label="卡片背景色"
+      >
+        <el-color-picker
+          v-model="datas.cardBgColor"
+          show-alpha
+          class="picke"
+          :predefine="predefineColors"
+        >
+        </el-color-picker>
+      </el-form-item>
+
+      <div style="height: 10px" />
+
       <el-form-item class="lef" label="背景图片">
         <div class="shop-head-pic" style="text-align: center">
           <img class="home-bg" :src="datas.bgImg" alt="" v-if="datas.bgImg" />
@@ -235,6 +341,7 @@ export default {
   },
   data() {
     return {
+      currentIndex: 0,
       predefineColors: [
         // 颜色选择器预设
         '#ff4500',
@@ -269,7 +376,40 @@ export default {
       uploadImgDataType: null,
     }
   },
-  created() {},
+  created() {
+    // 初始化数据
+    if (!this.datas.imageList) {
+      this.$set(this.datas, 'imageList', [])
+    }
+    if (this.datas.cardStyle === undefined) {
+      this.$set(this.datas, 'cardStyle', 0)
+    }
+    if (!this.datas.iconShape) {
+      this.$set(this.datas, 'iconShape', 'circle')
+    }
+    if (this.datas.showBadge === undefined) {
+      this.$set(this.datas, 'showBadge', false)
+    }
+    if (!this.datas.badgeType) {
+      this.$set(this.datas, 'badgeType', 'hot')
+    }
+    if (!this.datas.badgeText) {
+      this.$set(this.datas, 'badgeText', 'HOT')
+    }
+    if (!this.datas.badgeColor) {
+      this.$set(this.datas, 'badgeColor', '#ff4444')
+    }
+    if (this.datas.cardPadding === undefined) {
+      this.$set(this.datas, 'cardPadding', 10)
+    }
+    if (!this.datas.cardBgColor) {
+      this.$set(this.datas, 'cardBgColor', '#ffffff')
+    }
+    this.datas.imageList.forEach((item) => {
+      if (!item.http) item.http = {}
+      if (!item.linktype) item.linktype = '10'
+    })
+  },
   methods: {
     showUpload(type) {
       this.uploadImgDataType = type
@@ -282,8 +422,8 @@ export default {
           src: res,
           text: '',
           http: {},
+          linktype: '10',
         })
-        console.log(this.datas.imageList, 33333333333333)
       } else if (this.uploadImgDataType === '1') {
         this.datas.bgImg = res
       }
@@ -296,6 +436,23 @@ export default {
     /* 删除图片列表的图片 */
     deleteimg(index) {
       this.datas.imageList.splice(index, 1)
+    },
+    /* URL格式校验 */
+    validateUrl(item) {
+      if (item && item.http && item.http.externalLink) {
+        const url = item.http.externalLink
+        if (url && !/^https?:\/\//.test(url)) {
+          this.$message.warning('链接需以http://或https://开头')
+          item.http.externalLink = ''
+        }
+      }
+    },
+    /* 角标文字长度校验 */
+    validateBadgeText() {
+      if (this.datas.badgeText && this.datas.badgeText.length > 5) {
+        this.datas.badgeText = this.datas.badgeText.substring(0, 5)
+        this.$message.warning('角标文字最多5个字')
+      }
     },
   },
   components: { uploadimg, vuedraggable },
